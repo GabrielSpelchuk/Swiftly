@@ -1,0 +1,98 @@
+.profile-page {
+  padding: 32px 24px;
+}
+.profile-page__title {
+  font-size: 28px;
+  margin-bottom: 32px;
+}
+.profile-page__layout {
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  gap: 24px;
+  align-items: start;
+}
+.profile-card {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  padding: 32px 24px;
+  text-align: center;
+}
+.profile-card__avatar {
+  width: 72px;
+  height: 72px;
+  background: var(--accent);
+  color: var(--black);
+  font-family: var(--font-display);
+  font-size: 28px;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+.profile-card__name {
+  font-size: 18px;
+  font-weight: 700;
+}
+.profile-card__email {
+  font-size: 13px;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+.profile-card__balance {
+  margin-top: 20px;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 14px;
+}
+.profile-card__balance-label {
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+.profile-card__balance-value {
+  font-size: 22px;
+  font-weight: 800;
+  color: var(--success);
+  margin-top: 4px;
+}
+.profile-form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+.profile-form__section {
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+.profile-form__section-title {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.profile-form__actions {
+  display: flex;
+  justify-content: flex-end;
+}
+.product-page__owner-note {
+  margin-top: 12px;
+  font-size: 13px;
+  color: var(--text-secondary);
+  background: rgba(91, 156, 246, 0.06);
+  border: 1px solid rgba(91, 156, 246, 0.2);
+  border-left: 3px solid var(--info);
+  padding: 12px 14px;
+}
+@media (max-width: 768px) {
+  .profile-page__layout {
+    grid-template-columns: 1fr;
+  }
+}

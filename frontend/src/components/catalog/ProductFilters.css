@@ -1,0 +1,17 @@
+.filters {
+  display: flex; flex-direction: column; gap: 20px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  padding: 20px;
+  height: fit-content;
+  position: sticky; top: 80px;
+}
+.filters__header { display: flex; align-items: center; justify-content: space-between; }
+.filters__title {
+  font-size: 10px; font-weight: 700; letter-spacing: 0.12em;
+  color: var(--text-muted); font-family: var(--font-display);
+}
+.filters__clear {
+  font-size: 11px; color: var(--accent); background: none; border: none; cursor: pointer;
+}
+.filters__price-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }

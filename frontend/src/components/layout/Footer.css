@@ -1,0 +1,16 @@
+.footer {
+  border-top: 1px solid var(--border);
+  background: var(--surface-1);
+  margin-top: auto;
+}
+.footer__inner {
+  display: flex; align-items: center; justify-content: space-between;
+  flex-wrap: wrap; gap: 16px;
+  padding-top: 24px; padding-bottom: 24px;
+}
+.footer__logo { font-family: var(--font-display); font-size: 13px; font-weight: 800; letter-spacing: 0.12em; color: var(--accent); }
+.footer__tagline { font-size: 11px; color: var(--text-muted); margin-top: 4px; }
+.footer__links { display: flex; gap: 20px; }
+.footer__links a { font-size: 12px; color: var(--text-secondary); text-decoration: none; transition: color var(--transition); }
+.footer__links a:hover { color: var(--accent); }
+.footer__copy { font-size: 11px; color: var(--text-muted); }

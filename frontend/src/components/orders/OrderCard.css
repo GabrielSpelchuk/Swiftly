@@ -1,0 +1,18 @@
+.order-card {
+  display: flex; flex-direction: column; gap: 12px;
+  background: var(--surface-1);
+  border: 1px solid var(--border);
+  padding: 18px; text-decoration: none;
+  transition: border-color var(--transition), transform var(--transition-slow);
+}
+.order-card:hover { border-color: var(--accent); transform: translate(-2px,-2px); }
+.order-card__header { display: flex; align-items: flex-start; justify-content: space-between; }
+.order-card__id { font-family: var(--font-display); font-size: 15px; font-weight: 800; display: block; }
+.order-card__date { font-size: 11px; color: var(--text-muted); display: block; margin-top: 2px; }
+.order-card__customer { font-size: 13px; color: var(--text-secondary); }
+.order-card__address { display: block; font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+.order-card__tracking { font-size: 12px; color: var(--info); background: rgba(91,156,246,0.1); padding: 6px 10px; }
+.order-card__footer { display: flex; align-items: center; justify-content: space-between; border-top: 1px solid var(--border); padding-top: 12px; }
+.order-card__items { font-size: 12px; color: var(--text-muted); }
+.order-card__total { font-size: 16px; font-weight: 700; }
+.order-card__profit { font-size: 13px; font-weight: 600; color: var(--success); margin-left: 10px; }
