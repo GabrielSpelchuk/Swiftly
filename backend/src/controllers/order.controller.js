@@ -3,6 +3,10 @@ const { ORDER_SOURCE, ORDER_STATUS } = require('../models/order');
 const { ApiError } = require('../exeptions/api.error');
 
 async function create(req, res) {
+  if (req.user.role === 'dropshipper' && req.user.isApproved === false) {
+    throw ApiError.forbidden('Доступ до замовлень буде відкрито після підтвердження адміністратором');
+  }
+
   const { items, customerName, customerPhone, customerAddress, supplierId, notes } = req.body;
 
   if (!items?.length)

@@ -13,13 +13,43 @@ function validateEmail(v)    { if (!v) return 'Email is required'; if (!/^[\w.+-
 function validatePassword(v) { if (!v) return 'Password is required'; if (v.length < 6) return 'At least 6 characters'; }
 
 async function registration(req, res) {
-  const { name, email, password, role } = req.body;
+  const { name, email, password, role, phone, shopUrl, salesChannel, experience } = req.body;
+  
   const errors = { name: validateName(name), email: validateEmail(email), password: validatePassword(password) };
   if (errors.name || errors.email || errors.password) throw ApiError.badRequest('Validation failed', errors);
+  
   const allowed = ['customer', 'dropshipper', 'supplier'];
+  const targetRole = allowed.includes(role) ? role : 'customer';
+
+  if (targetRole === 'dropshipper') {
+    if (!phone?.trim()) throw ApiError.badRequest('Номер телефону є обов\'язковим для дропшипера');
+    if (!shopUrl?.trim()) throw ApiError.badRequest('Посилання на торгову сторінку є обов\'язковим');
+    if (!salesChannel || salesChannel === '') throw ApiError.badRequest('Будь ласка, оберіть основний канал продажів');
+    if (!experience?.trim() || experience.trim().length < 10) {
+      throw ApiError.badRequest('Будь ласка, напишіть детальніше про свій досвід або додайте посилання на докази (мінімум 10 символів)');
+    }
+  }
+
   const hashedPassword = await bcrypt.hash(password, 10);
-  await userService.register(name, email, hashedPassword, allowed.includes(role) ? role : 'customer');
-  res.send({ message: 'Registration successful. Please check your email to activate your account.' });
+  const isApproved = targetRole !== 'dropshipper';
+
+  await userService.register(
+    name, 
+    email, 
+    hashedPassword, 
+    targetRole, 
+    phone, 
+    shopUrl, 
+    salesChannel, 
+    experience, 
+    isApproved
+  );
+
+  const message = targetRole === 'dropshipper'
+    ? 'Реєстрація успішна. Активуйте email, після чого адміністратор перевірить вашу заявку дропшипера.'
+    : 'Registration successful. Please check your email to activate your account.';
+
+  res.send({ message });
 }
 
 async function activate(req, res) {
@@ -27,7 +57,6 @@ async function activate(req, res) {
   const user = await User.findOne({ where: { activationToken } });
 
   if (!user) {
-    // Token already used or invalid — either way, tell user they can log in
     return res.status(200).send({ message: 'Already activated or invalid token' });
   }
 
@@ -43,7 +72,15 @@ async function login(req, res) {
   if (user.activationToken) throw ApiError.badRequest('Please activate your account first');
   if (user.isBlocked)       throw ApiError.forbidden('Your account has been blocked');
   if (!await bcrypt.compare(password, user.password)) throw ApiError.badRequest('Invalid email or password');
-  await generateTokens(res, user);
+
+  const extra = user.role === 'dropshipper' && !user.isApproved
+    ? {
+      pendingApproval: true,
+      message: 'Ваш акаунт очікує підтвердження адміністратором. Після схвалення ви отримаєте доступ до гуртових цін та замовлень.',
+    }
+    : {};
+
+  await generateTokens(res, user, extra);
 }
 
 async function refresh(req, res) {
@@ -88,7 +125,7 @@ async function resetPassword(req, res) {
   res.send({ message: 'Password reset successfully' });
 }
 
-async function generateTokens(res, user) {
+async function generateTokens(res, user, extra = {}) {
   const normalizedUser = userService.normalize(user);
   const accessToken    = jwtService.sign(normalizedUser);
   const refreshToken   = jwtService.signRefresh(normalizedUser);
@@ -96,10 +133,10 @@ async function generateTokens(res, user) {
   res.cookie('refreshToken', refreshToken, {
     maxAge: 30 * 24 * 60 * 60 * 1000,
     httpOnly: true,
-    sameSite: 'lax',   // lax works for localhost cross-port
-    secure: false,     // must be false for http://localhost
+    sameSite: 'lax',
+    secure: false,
   });
-  res.send({ user: normalizedUser, accessToken });
+  res.send({ user: normalizedUser, accessToken, ...extra });
 }
 
 module.exports = { registration, activate, login, refresh, logout, forgotPassword, resetPassword };

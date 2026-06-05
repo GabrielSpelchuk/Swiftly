@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { orderApi, analyticsApi } from '../../api/services';
+import { useAuth } from '../../hooks/useAuth';
 import { StatCard } from '../../components/dashboard/StatCard';
 import { OrderCard } from '../../components/orders/OrderCard';
 import { Spinner } from '../../components/common/Spinner';
@@ -9,17 +10,51 @@ import { formatPrice, ORDER_STATUS_LABELS } from '../../utils/format';
 import './Dashboard.css';
 
 export function DropshipperDashboard() {
+  const { isPendingDropshipper } = useAuth();
   const [stats, setStats] = useState(null);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (isPendingDropshipper) {
+      setLoading(false);
+      return;
+    }
     Promise.all([analyticsApi.getStats(), orderApi.getMyOrders()])
       .then(([s, o]) => { setStats(s.data); setOrders(o.data); })
       .finally(() => setLoading(false));
-  }, []);
+  }, [isPendingDropshipper]);
 
   if (loading) return <Spinner />;
+
+  if (isPendingDropshipper) {
+    return (
+      <div className="dashboard container">
+        <div className="dashboard__header">
+          <div>
+            <div className="dashboard__tag">ДРОПШИПЕР</div>
+            <h1 className="dashboard__title">Очікування підтвердження</h1>
+          </div>
+        </div>
+        <div className="dashboard__section" style={{
+          maxWidth: 560,
+          padding: '32px',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          background: 'var(--surface)',
+        }}>
+          <p style={{ marginBottom: 16, lineHeight: 1.6 }}>
+            Дякуємо за реєстрацію як дропшипер. Адміністратор перевіряє ваші дані
+            (телефон, канал продажів, посилання на магазин та коментар) і підтвердить акаунт.
+          </p>
+          <p style={{ color: 'var(--text-secondary)', fontSize: 14, marginBottom: 24 }}>
+            Після схвалення ви побачите гуртові ціни в каталозі та зможете оформлювати замовлення.
+          </p>
+          <Link to="/catalog"><Button variant="secondary">Переглянути каталог (роздріб)</Button></Link>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="dashboard container">

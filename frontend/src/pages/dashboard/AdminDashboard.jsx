@@ -16,10 +16,26 @@ export function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('stats');
   const [newCategory, setNewCategory] = useState('');
+  const [editingCategoryId, setEditingCategoryId] = useState(null);
+  const [editingCategoryName, setEditingCategoryName] = useState('');
+  const [pendingDropshippers, setPendingDropshippers] = useState([]);
+
+  const categoryErrorMessage = (err) =>
+    err.response?.data?.message || 'Помилка операції з категорією';
 
   const loadData = () => {
-    Promise.all([analyticsApi.getStats(), adminApi.getUsers(), categoryApi.getAll()])
-      .then(([s, u, c]) => { setStats(s.data); setUsers(u.data); setCategories(c.data); })
+    Promise.all([
+      analyticsApi.getStats(),
+      adminApi.getUsers(),
+      categoryApi.getAll(),
+      adminApi.getPendingDropshippers(),
+    ])
+      .then(([s, u, c, p]) => {
+        setStats(s.data);
+        setUsers(u.data);
+        setCategories(c.data);
+        setPendingDropshippers(p.data);
+      })
       .finally(() => setLoading(false));
   };
   useEffect(() => { loadData(); }, []);
@@ -44,22 +60,64 @@ export function AdminDashboard() {
 
   const handleAddCategory = async (e) => {
     e.preventDefault();
-    if (!newCategory) return;
+    if (!newCategory.trim()) return;
     try {
-      await categoryApi.create({ name: newCategory });
+      await categoryApi.create({ name: newCategory.trim() });
       toast.success('Категорію додано');
       setNewCategory('');
       loadData();
-    } catch { toast.error('Помилка'); }
+    } catch (err) {
+      toast.error(categoryErrorMessage(err));
+    }
+  };
+
+  const startEditCategory = (category) => {
+    setEditingCategoryId(category.id);
+    setEditingCategoryName(category.name);
+  };
+
+  const cancelEditCategory = () => {
+    setEditingCategoryId(null);
+    setEditingCategoryName('');
+  };
+
+  const handleSaveCategory = async (id) => {
+    if (!editingCategoryName.trim()) {
+      toast.error('Назва не може бути порожньою');
+      return;
+    }
+    try {
+      await categoryApi.update(id, { name: editingCategoryName.trim() });
+      toast.success('Категорію оновлено');
+      cancelEditCategory();
+      loadData();
+    } catch (err) {
+      toast.error(categoryErrorMessage(err));
+    }
   };
 
   const handleDeleteCategory = async (id) => {
-    if (!window.confirm('Видалити категорію?')) return;
+    if (!window.confirm('Видалити категорію? Товари залишаться без категорії.')) return;
     try {
       await categoryApi.remove(id);
       toast.success('Видалено');
+      if (editingCategoryId === id) cancelEditCategory();
       loadData();
-    } catch { toast.error('Помилка'); }
+    } catch (err) {
+      toast.error(categoryErrorMessage(err));
+    }
+  };
+
+  const handleReviewDropshipper = async (userId, status) => {
+    const label = status === 'approve' ? 'підтвердити' : 'відхилити';
+    if (!window.confirm(`Ви впевнені, що хочете ${label} цього дропшипера?`)) return;
+    try {
+      const { data } = await adminApi.reviewDropshipper(userId, status);
+      toast.success(data.message || 'Готово');
+      loadData();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Помилка');
+    }
   };
 
   if (loading) return <Spinner />;
@@ -81,9 +139,14 @@ export function AdminDashboard() {
       </div>
 
       <div className="dashboard__tabs">
-        {['stats', 'users', 'categories'].map((t) => (
+        {['stats', 'dropshippers', 'users', 'categories'].map((t) => (
           <button key={t} className={`dashboard__tab ${activeTab === t ? 'dashboard__tab--active' : ''}`} onClick={() => setActiveTab(t)}>
-            {{ stats: 'Статистика', users: 'Користувачі', categories: 'Категорії' }[t]}
+            {{
+              stats: 'Статистика',
+              dropshippers: `Заявки дропшиперів${pendingDropshippers.length ? ` (${pendingDropshippers.length})` : ''}`,
+              users: 'Користувачі',
+              categories: 'Категорії',
+            }[t]}
           </button>
         ))}
       </div>
@@ -96,6 +159,61 @@ export function AdminDashboard() {
               <StatCard key={r.role} label={ROLE_LABELS[r.role] || r.role} value={r.count} />
             ))}
           </div>
+        </div>
+      )}
+
+      {activeTab === 'dropshippers' && (
+        <div className="dashboard__section">
+          {pendingDropshippers.length === 0 ? (
+            <div className="dashboard__empty">Немає заявок на перевірку</div>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+              {pendingDropshippers.map((d) => (
+                <div
+                  key={d.id}
+                  style={{
+                    border: '1px solid var(--border)',
+                    borderRadius: 10,
+                    padding: 20,
+                    background: 'var(--surface)',
+                  }}
+                >
+                  <div style={{ display: 'flex', justifyContent: 'space-between', flexWrap: 'wrap', gap: 12, marginBottom: 12 }}>
+                    <div>
+                      <strong>{d.name}</strong>
+                      <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{d.email}</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <Button size="sm" onClick={() => handleReviewDropshipper(d.id, 'approve')}>
+                        Підтвердити
+                      </Button>
+                      <Button size="sm" variant="danger" onClick={() => handleReviewDropshipper(d.id, 'reject')}>
+                        Відхилити
+                      </Button>
+                    </div>
+                  </div>
+                  <div style={{ display: 'grid', gap: 8, fontSize: 14 }}>
+                    <div><strong>Телефон:</strong> {d.phone || '—'}</div>
+                    <div><strong>Канал продажів:</strong> {d.salesChannel || '—'}</div>
+                    <div>
+                      <strong>Магазин / сторінка:</strong>{' '}
+                      {d.shopUrl ? (
+                        <a href={d.shopUrl} target="_blank" rel="noreferrer" style={{ color: 'var(--accent)' }}>
+                          {d.shopUrl}
+                        </a>
+                      ) : '—'}
+                    </div>
+                    <div>
+                      <strong>Досвід / докази:</strong>
+                      <p style={{ margin: '4px 0 0', whiteSpace: 'pre-wrap', color: 'var(--text-secondary)' }}>
+                        {d.experience || '—'}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
@@ -112,8 +230,11 @@ export function AdminDashboard() {
                 <Badge color={u.role === 'admin' ? 'var(--danger)' : u.role === 'supplier' ? 'var(--info)' : u.role === 'dropshipper' ? 'var(--accent)' : 'var(--success)'}>
                   {ROLE_LABELS[u.role]}
                 </Badge>
-                <span style={{ color: u.isBlocked ? 'var(--danger)' : 'var(--success)' }}>
-                  {u.isBlocked ? 'Заблокований' : 'Активний'}
+                <span style={{
+                  color: u.isBlocked ? 'var(--danger)' : u.role === 'dropshipper' && !u.isApproved ? 'var(--warning)' : 'var(--success)',
+                  fontSize: 12,
+                }}>
+                  {u.isBlocked ? 'Заблокований' : u.role === 'dropshipper' && !u.isApproved ? 'Очікує схвалення' : 'Активний'}
                 </span>
                 <div style={{ display: 'flex', gap: 8 }}>
                   {u.role !== 'admin' && (
@@ -139,13 +260,36 @@ export function AdminDashboard() {
           </form>
           <div className="products-table" style={{ marginTop: 16 }}>
             <div className="products-table__head" style={{ gridTemplateColumns: '1fr 1fr auto' }}>
-              <span>Назва</span><span>Slug</span><span>Дія</span>
+              <span>Назва</span><span>Slug</span><span>Дії</span>
             </div>
             {categories.map((c) => (
               <div key={c.id} className="products-table__row" style={{ gridTemplateColumns: '1fr 1fr auto' }}>
-                <span>{c.name}</span>
-                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{c.slug}</span>
-                <Button size="sm" variant="danger" onClick={() => handleDeleteCategory(c.id)}>Видалити</Button>
+                {editingCategoryId === c.id ? (
+                  <Input
+                    value={editingCategoryName}
+                    onChange={(e) => setEditingCategoryName(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter') { e.preventDefault(); handleSaveCategory(c.id); }
+                      if (e.key === 'Escape') cancelEditCategory();
+                    }}
+                  />
+                ) : (
+                  <span>{c.name}</span>
+                )}
+                <span style={{ color: 'var(--text-muted)', fontSize: 12 }}>{c.slug || '—'}</span>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  {editingCategoryId === c.id ? (
+                    <>
+                      <Button size="sm" onClick={() => handleSaveCategory(c.id)}>Зберегти</Button>
+                      <Button size="sm" variant="secondary" onClick={cancelEditCategory}>Скасувати</Button>
+                    </>
+                  ) : (
+                    <>
+                      <Button size="sm" variant="secondary" onClick={() => startEditCategory(c)}>Редагувати</Button>
+                      <Button size="sm" variant="danger" onClick={() => handleDeleteCategory(c.id)}>Видалити</Button>
+                    </>
+                  )}
+                </div>
               </div>
             ))}
           </div>

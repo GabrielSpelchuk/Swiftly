@@ -3,8 +3,18 @@ const { User } = require('../models/user');
 const { ApiError } = require('../exeptions/api.error');
 const { sendActivationEmail } = require('./email.service');
 
-function normalize({ id, name, email, role, balance, phone, isBlocked }) {
-  return { id, name, email, role, balance, phone, isBlocked };
+function normalize(user) {
+  const {
+    id, name, email, role, balance, phone, isBlocked,
+    isApproved, shopUrl, salesChannel, experience,
+  } = user;
+  return {
+    id, name, email, role, balance, phone, isBlocked,
+    isApproved: isApproved !== false,
+    shopUrl: shopUrl || null,
+    salesChannel: salesChannel || null,
+    experience: experience || null,
+  };
 }
 
 function findByEmail(email) {
@@ -15,7 +25,17 @@ function findById(id) {
   return User.findByPk(id);
 }
 
-async function register(name, email, password, role = 'customer') {
+async function register(
+  name,
+  email,
+  password,
+  role = 'customer',
+  phone = null,
+  shopUrl = null,
+  salesChannel = null,
+  experience = null,
+  isApproved = true,
+) {
   const existUser = await findByEmail(email);
 
   if (existUser) {
@@ -25,8 +45,20 @@ async function register(name, email, password, role = 'customer') {
   }
 
   const activationToken = uuidv4();
+  const isDropshipper = role === 'dropshipper';
 
-  await User.create({ name, email, password, activationToken, role });
+  await User.create({
+    name,
+    email,
+    password,
+    activationToken,
+    role,
+    phone: isDropshipper ? phone?.trim() : null,
+    shopUrl: isDropshipper ? shopUrl?.trim() : null,
+    salesChannel: isDropshipper ? salesChannel : null,
+    experience: isDropshipper ? experience?.trim() : null,
+    isApproved,
+  });
   await sendActivationEmail(email, activationToken);
 }
 

@@ -1,6 +1,5 @@
 const express = require('express');
 const adminController = require('../controllers/admin.controller');
-const categoryController = require('../controllers/category.controller');
 const { authMiddleware } = require('../middlewares/auth.middleware');
 const { requireRole } = require('../middlewares/role.middleware');
 const { catchError } = require('../utils/catchError');
@@ -14,5 +13,8 @@ adminRouter.get('/users', catchError(adminController.getAllUsers));
 adminRouter.patch('/users/:id/block', catchError(adminController.blockUser));
 adminRouter.patch('/users/:id/unblock', catchError(adminController.unblockUser));
 adminRouter.delete('/users/:id', catchError(adminController.deleteUser));
+
+adminRouter.get('/dropshippers/pending', catchError(adminController.getPendingDropshippers));
+adminRouter.patch('/dropshippers/:userId/review', catchError(adminController.reviewDropshipper));
 
 module.exports = { adminRouter };

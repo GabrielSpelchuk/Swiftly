@@ -51,12 +51,34 @@ app.use('/analytics', analyticsRouter);
 app.use((req, res) => res.status(404).send({ message: 'Route not found' }));
 app.use(errorMiddleware);
 
+async function repairCategorySlugs() {
+  const { Op } = require('sequelize');
+  const { Category } = require('./models/category');
+  const { uniqueCategorySlug } = require('./utils/slugify');
+
+  const broken = await Category.findAll({
+    where: {
+      [Op.or]: [{ slug: '' }, { slug: null }],
+    },
+  });
+
+  for (const category of broken) {
+    category.slug = await uniqueCategorySlug(Category, category.name, category.id);
+    await category.save();
+  }
+
+  if (broken.length) {
+    console.log(`✅ Repaired ${broken.length} category slug(s)`);
+  }
+}
+
 async function start() {
   try {
     await client.authenticate();
     console.log('✅ Database connected');
     await client.sync({ alter: true });
     console.log('✅ Tables synced');
+    await repairCategorySlugs();
     app.listen(PORT, () => console.log(`🚀 Server: http://localhost:${PORT}`));
   } catch (err) {
     console.error('❌ Startup error:', err.message);

@@ -26,7 +26,7 @@ export function HomePage() {
           <div className="home__hero-visual">
             <div className="home__panel">
               <div className="home__panel-row home__panel-row--header">
-                <span>▲ DROPSYNC</span><span style={{color:'var(--success)'}}>● LIVE</span>
+                <span>▲ SWIFTLY</span><span style={{color:'var(--success)'}}>● LIVE</span>
               </div>
               {[
                 { label: 'Прибуток сьогодні', value: '₴ 4,850', up: true },

@@ -20,6 +20,7 @@
   font-weight: 800; font-size: 16px;
   letter-spacing: 0.12em;
   color: var(--text-primary);
+  line-height: 100%;
 }
 .navbar__logo-text span { color: var(--accent); }
 

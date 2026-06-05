@@ -13,7 +13,7 @@ import './OrderDetailPage.css';
 export function OrderDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { isSupplier, isAdmin, isDropshipper, isCustomer } = useAuth();
+  const { isSupplier, isAdmin, isApprovedDropshipper, isCustomer } = useAuth();
   const [order, setOrder] = useState(null);
   const [loading, setLoading] = useState(true);
   const [statusForm, setStatusForm] = useState({ status: '', trackingNumber: '' });
@@ -45,7 +45,7 @@ export function OrderDetailPage() {
   const statusColor = ORDER_STATUS_COLORS[order.status] || '#888';
 
   // Customers only see retail total — no wholesale/profit info
-  const showFinancials = isSupplier || isAdmin || isDropshipper;
+  const showFinancials = isSupplier || isAdmin || isApprovedDropshipper;
 
   return (
     <div className="order-detail container">

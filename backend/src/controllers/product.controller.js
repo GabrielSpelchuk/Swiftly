@@ -3,7 +3,7 @@ const { ApiError } = require('../exeptions/api.error');
 
 async function getAll(req, res) {
   const { categoryId, minPrice, maxPrice, search, page, limit } = req.query;
-  const isDropshipper = req.user?.role === 'dropshipper';
+  const isDropshipper = req.user?.role === 'dropshipper' && req.user?.isApproved !== false;
   const isSupplierOrAdmin = req.user?.role === 'supplier' || req.user?.role === 'admin';
 
   const result = await productService.getAll({
@@ -19,8 +19,10 @@ async function getAll(req, res) {
 }
 
 async function getOne(req, res) {
+  const isApprovedDropshipper =
+    req.user?.role === 'dropshipper' && req.user?.isApproved !== false;
   const isDropshipper =
-    req.user?.role === 'dropshipper' ||
+    isApprovedDropshipper ||
     req.user?.role === 'supplier' ||
     req.user?.role === 'admin';
   const product = await productService.getById(req.params.id, isDropshipper);
@@ -39,6 +41,8 @@ async function create(req, res) {
 
   const { name, description, wholesalePrice, retailPrice, stock, categoryId, images } = req.body;
 
+  const supplierId = req.user.id;
+
   if (!name || !wholesalePrice || !retailPrice) {
     throw ApiError.badRequest('name, wholesalePrice, and retailPrice are required');
   }
@@ -49,9 +53,9 @@ async function create(req, res) {
     wholesalePrice: Number(wholesalePrice),
     retailPrice:    Number(retailPrice),
     stock:          Number(stock) || 0,
-    // Convert empty string → null so Postgres integer FK accepts it
     categoryId: categoryId && categoryId !== '' ? Number(categoryId) : null,
-    images: images || [],
+    images: Array.isArray(images) ? images : [],
+    supplierId,
   });
 
   res.status(201).send(product);
@@ -62,9 +66,17 @@ async function update(req, res) {
     throw ApiError.forbidden('Only suppliers can update products');
   }
 
+  const existingProduct = await productService.getById(req.params.id, true);
+  if (!existingProduct) {
+    throw ApiError.notFound('Товар не знайдено');
+  }
+  
+  if (existingProduct.supplierId !== req.user.id && req.user.role !== 'admin') {
+    throw ApiError.forbidden('Ви не маєте доступу до редагування цього товару');
+  }
+
   const data = { ...req.body };
 
-  // Sanitize numeric/nullable fields
   if (data.categoryId === '' || data.categoryId === undefined) data.categoryId = null;
   else data.categoryId = Number(data.categoryId);
 
@@ -72,8 +84,14 @@ async function update(req, res) {
   if (data.retailPrice    !== undefined) data.retailPrice    = Number(data.retailPrice);
   if (data.stock          !== undefined) data.stock          = Number(data.stock);
 
-  const product = await productService.update(req.params.id, req.user.id, data);
-  res.send(product);
+  if (data.images !== undefined) {
+    data.images = Array.isArray(data.images) ? data.images : [];
+  }
+
+  const targetSupplierId = req.user.role === 'admin' ? existingProduct.supplierId : req.user.id;
+
+  const updatedProduct = await productService.update(req.params.id, targetSupplierId, data);
+  res.send(updatedProduct);
 }
 
 async function remove(req, res) {

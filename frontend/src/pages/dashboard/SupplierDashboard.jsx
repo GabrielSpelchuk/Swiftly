@@ -6,6 +6,7 @@ import { OrderCard } from '../../components/orders/OrderCard';
 import { Button } from '../../components/common/Button';
 import { Spinner } from '../../components/common/Spinner';
 import { formatPrice } from '../../utils/format';
+import { toast } from 'react-toastify';
 import './Dashboard.css';
 
 export function SupplierDashboard() {
@@ -26,6 +27,17 @@ export function SupplierDashboard() {
       setOrders(o.data);
     }).finally(() => setLoading(false));
   }, []);
+
+  const handleDeleteProduct = async (id, name) => {
+    if (!window.confirm(`Видалити товар «${name}»? Цю дію не можна скасувати.`)) return;
+    try {
+      await productApi.remove(id);
+      toast.success('Товар видалено');
+      setProducts((prev) => prev.filter((p) => p.id !== id));
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Не вдалося видалити товар');
+    }
+  };
 
   if (loading) return <Spinner />;
 
@@ -69,11 +81,23 @@ export function SupplierDashboard() {
       {activeTab === 'products' && (
         <div className="dashboard__section">
           <div className="products-table">
-            <div className="products-table__head">
-              <span>Назва</span><span>Гурт</span><span>Роздріб</span><span>Залишок</span><span>Статус</span><span></span>
+            <div className="products-table__head" style={{ gridTemplateColumns: '48px 1fr 1fr 1fr 1fr 1fr auto' }}>
+              <span></span><span>Назва</span><span>Гурт</span><span>Роздріб</span><span>Залишок</span><span>Статус</span><span>Дії</span>
             </div>
-            {products.map((p) => (
-              <div key={p.id} className="products-table__row">
+            {products.length === 0 ? (
+              <div className="dashboard__empty">Товарів ще немає</div>
+            ) : products.map((p) => (
+              <div key={p.id} className="products-table__row" style={{ gridTemplateColumns: '48px 1fr 1fr 1fr 1fr 1fr auto' }}>
+                {p.images?.[0] ? (
+                  <img
+                    src={p.images[0]}
+                    alt=""
+                    style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }}
+                    onError={(e) => { e.target.style.display = 'none'; }}
+                  />
+                ) : (
+                  <span style={{ fontSize: 20, opacity: 0.3 }}>📷</span>
+                )}
                 <span className="products-table__name">{p.name}</span>
                 <span>{formatPrice(p.wholesalePrice)}</span>
                 <span>{formatPrice(p.retailPrice)}</span>
@@ -81,9 +105,18 @@ export function SupplierDashboard() {
                 <span style={{ color: p.isActive ? 'var(--success)' : 'var(--text-muted)' }}>
                   {p.isActive ? 'Активний' : 'Прихований'}
                 </span>
-                <Link to={`/dashboard/supplier/products/${p.id}/edit`}>
-                  <Button variant="ghost" size="sm">Ред.</Button>
-                </Link>
+                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <Link to={`/dashboard/supplier/products/${p.id}/edit`}>
+                    <Button variant="secondary" size="sm">Редагувати</Button>
+                  </Link>
+                  <Button
+                    variant="danger"
+                    size="sm"
+                    onClick={() => handleDeleteProduct(p.id, p.name)}
+                  >
+                    Видалити
+                  </Button>
+                </div>
               </div>
             ))}
           </div>

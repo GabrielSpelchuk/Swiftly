@@ -24,7 +24,7 @@ export function ForgotPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-box">
-        <div className="auth-logo">▲ DROPSYNC</div>
+        <div className="auth-logo">▲ SWIFTLY</div>
         <h1 className="auth-title">Відновлення паролю</h1>
         {sent ? (
           <div style={{ color: 'var(--success)', fontSize: 14, lineHeight: 1.7 }}>

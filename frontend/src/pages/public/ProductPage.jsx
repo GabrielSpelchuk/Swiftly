@@ -17,7 +17,7 @@ export function ProductPage() {
   const [loading, setLoading] = useState(true);
   const [addingToCart, setAddingToCart] = useState(false);
   const { addItem } = useCart();
-  const { isSupplier, isAdmin, isDropshipper, isLoggedIn, user } = useAuth();
+  const { isSupplier, isAdmin, isApprovedDropshipper, isPendingDropshipper, isLoggedIn, user } = useAuth();
 
   useEffect(() => {
     productApi.getOne(id)
@@ -98,8 +98,8 @@ export function ProductPage() {
       );
     }
 
-    // --- Dropshipper ---
-    if (isDropshipper) {
+    // --- Dropshipper (approved) ---
+    if (isApprovedDropshipper) {
       return (
         <div className="product-page__price-breakdown">
           <div className="product-page__price-row product-page__price-row--wholesale">
@@ -175,9 +175,15 @@ export function ProductPage() {
             </div>
           )}
 
-          {isDropshipper && (
+          {isApprovedDropshipper && (
             <div className="product-page__dropship-note">
               💡 Ви оплачуєте гуртову ціну — різниця між роздрібом і гуртом є вашим прибутком
+            </div>
+          )}
+
+          {isPendingDropshipper && (
+            <div className="product-page__dropship-note" style={{ borderColor: 'var(--warning)' }}>
+              ⏳ Ваш акаунт дропшипера очікує підтвердження адміністратором. Гуртові ціни та замовлення будуть доступні після схвалення.
             </div>
           )}
 

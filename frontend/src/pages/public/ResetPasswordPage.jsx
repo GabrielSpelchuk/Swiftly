@@ -29,7 +29,7 @@ export function ResetPasswordPage() {
   return (
     <div className="auth-page">
       <div className="auth-box">
-        <div className="auth-logo">▲ DROPSYNC</div>
+        <div className="auth-logo">▲ SWIFTLY</div>
         <h1 className="auth-title">Новий пароль</h1>
         <form onSubmit={handleSubmit} className="auth-form">
           <Input label="Новий пароль" type="password" value={form.newPassword} onChange={e => setForm(f => ({ ...f, newPassword: e.target.value }))} required />

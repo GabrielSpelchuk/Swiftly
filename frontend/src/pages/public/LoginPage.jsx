@@ -4,6 +4,7 @@ import { useDispatch } from 'react-redux';
 import { loginThunk } from '../../store/slices/authSlice';
 import { Input } from '../../components/common/Input';
 import { Button } from '../../components/common/Button';
+import { toast } from 'react-toastify';
 import './AuthPage.css';
 
 export function LoginPage() {
@@ -18,7 +19,9 @@ export function LoginPage() {
     setLoading(true); setError('');
     const result = await dispatch(loginThunk(form));
     if (loginThunk.fulfilled.match(result)) {
-      const role = result.payload.role;
+      const { user, pendingApproval, message } = result.payload;
+      if (pendingApproval && message) toast.info(message, { autoClose: 6000 });
+      const role = user.role;
       if (role === 'admin') navigate('/dashboard/admin');
       else if (role === 'supplier') navigate('/dashboard/supplier');
       else if (role === 'dropshipper') navigate('/dashboard/dropshipper');
@@ -32,7 +35,7 @@ export function LoginPage() {
   return (
     <div className="auth-page">
       <div className="auth-box">
-        <div className="auth-logo">▲ DROPSYNC</div>
+        <div className="auth-logo">▲ SWIFTLY</div>
         <h1 className="auth-title">Увійти</h1>
         <p className="auth-sub">Ласкаво просимо назад</p>
         {error && <div className="auth-error">{error}</div>}

@@ -29,7 +29,7 @@ export function ActivatePage() {
   return (
     <div className="auth-page">
       <div className="auth-box activate-box">
-        <div className="auth-logo">▲ DROPSYNC</div>
+        <div className="auth-logo">▲ SWIFTLY</div>
 
         {status === 'loading' && (
           <div className="activate-state">

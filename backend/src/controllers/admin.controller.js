@@ -40,4 +40,46 @@ async function deleteUser(req, res) {
   res.sendStatus(204);
 }
 
-module.exports = { getAllUsers, blockUser, unblockUser, deleteUser };
+async function getPendingDropshippers(req, res) {
+  const pendingUsers = await User.findAll({
+    where: {
+      role: 'dropshipper',
+      isApproved: false,
+      activationToken: null,
+    },
+    attributes: { exclude: ['password', 'activationToken', 'resetToken'] },
+    order: [['createdAt', 'DESC']],
+  });
+  res.send(pendingUsers);
+}
+
+async function reviewDropshipper(req, res) {
+  const { userId } = req.params;
+  const { status } = req.body; // 'approve' або 'reject'
+
+  const user = await User.findByPk(userId);
+  if (!user || user.role !== 'dropshipper') {
+    throw ApiError.notFound('Дропшипера не знайдено');
+  }
+
+  if (status === 'approve') {
+    user.isApproved = true;
+    await user.save();
+    return res.send({ message: 'Дропшипера успішно підтверджено!' });
+  } 
+  
+  if (status === 'reject') {
+    user.role = 'customer';
+    user.shopUrl = null;
+    user.phone = null;
+    user.salesChannel = null;
+    user.experience = null;
+    user.isApproved = true;
+    await user.save();
+    return res.send({ message: 'Заявку відхилено. Користувачу присвоєно роль покупця.' });
+  }
+
+  throw ApiError.badRequest('Невідомий статус рішення');
+}
+
+module.exports = { getAllUsers, blockUser, unblockUser, deleteUser, getPendingDropshippers, reviewDropshipper };

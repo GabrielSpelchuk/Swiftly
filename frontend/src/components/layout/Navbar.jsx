@@ -26,7 +26,7 @@ export function Navbar() {
       <div className="navbar__inner container">
         <Link to="/" className="navbar__logo">
           <span className="navbar__logo-mark">▲</span>
-          <span className="navbar__logo-text">DROP<span>SYNC</span></span>
+          <span className="navbar__logo-text">Swif<span>tly</span></span>
         </Link>
 
         <div className="navbar__links">

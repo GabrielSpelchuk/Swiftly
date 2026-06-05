@@ -6,7 +6,7 @@ export const loginThunk = createAsyncThunk('auth/login', async (credentials, { r
   try {
     const { data } = await authApi.login(credentials);
     localStorage.setItem('accessToken', data.accessToken);
-    return data.user;
+    return { user: data.user, pendingApproval: !!data.pendingApproval, message: data.message };
   } catch (err) {
     return rejectWithValue(err.response?.data?.message || 'Login failed');
   }
@@ -41,14 +41,18 @@ export const refreshThunk = createAsyncThunk('auth/refresh', async (_, { rejectW
 
 const authSlice = createSlice({
   name: 'auth',
-  initialState: { user: null, isLoading: true, error: null },
+  initialState: { user: null, isLoading: true, error: null, pendingApprovalMessage: null },
   reducers: {
     clearError: (state) => { state.error = null; },
   },
   extraReducers: (builder) => {
     builder
       .addCase(loginThunk.pending,    (s) => { s.isLoading = true;  s.error = null; })
-      .addCase(loginThunk.fulfilled,  (s, { payload }) => { s.isLoading = false; s.user = payload; })
+      .addCase(loginThunk.fulfilled,  (s, { payload }) => {
+        s.isLoading = false;
+        s.user = payload.user;
+        s.pendingApprovalMessage = payload.pendingApproval ? payload.message : null;
+      })
       .addCase(loginThunk.rejected,   (s, { payload }) => { s.isLoading = false; s.error = payload; })
 
       .addCase(registerThunk.pending,   (s) => { s.isLoading = true;  s.error = null; })

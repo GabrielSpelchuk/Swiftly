@@ -63,4 +63,7 @@ export const adminApi = {
   blockUser: (id) => api.patch(`/admin/users/${id}/block`),
   unblockUser: (id) => api.patch(`/admin/users/${id}/unblock`),
   deleteUser: (id) => api.delete(`/admin/users/${id}`),
+  getPendingDropshippers: () => api.get('/admin/dropshippers/pending'),
+  reviewDropshipper: (userId, status) =>
+    api.patch(`/admin/dropshippers/${userId}/review`, { status }),
 };

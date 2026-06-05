@@ -7,10 +7,10 @@ import { toast } from 'react-toastify';
 import './ProductCard.css';
 
 export function ProductCard({ product }) {
-  const { isSupplier, isAdmin, isDropshipper } = useAuth();
+  const { isSupplier, isAdmin, isApprovedDropshipper } = useAuth();
   const { addItem } = useCart();
 
-  const showWholesale = isDropshipper || isSupplier || isAdmin;
+  const showWholesale = isApprovedDropshipper || isSupplier || isAdmin;
   const canAddToCart  = !isSupplier && !isAdmin;
 
   const margin = showWholesale && product.wholesalePrice && product.retailPrice

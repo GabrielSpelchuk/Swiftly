@@ -41,10 +41,25 @@ const User = client.define(
       allowNull: true,
     },
     balance: {
-      // For dropshippers: accumulated profit
       type: DataTypes.DECIMAL(10, 2),
       defaultValue: 0,
     },
+    shopUrl: {
+      type: DataTypes.STRING,
+      allowNull: true, 
+    },
+    salesChannel: {
+      type: DataTypes.STRING,
+      allowNull: true,
+    },
+    experience: {
+      type: DataTypes.TEXT,
+      allowNull: true,
+    },
+    isApproved: {
+      type: DataTypes.BOOLEAN,
+      defaultValue: true,
+    }
   },
   {
     tableName: 'users',

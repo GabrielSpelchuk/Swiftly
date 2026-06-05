@@ -1,4 +1,4 @@
-# DropSync — Frontend
+# Swiftly — Frontend
 
 React-застосунок для платформи дропшипінгу.
 
