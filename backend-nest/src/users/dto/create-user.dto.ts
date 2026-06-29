@@ -5,6 +5,7 @@ import {
   IsOptional,
   IsEnum,
   IsBoolean,
+  IsUrl,
 } from 'class-validator';
 import { Roles } from 'src/utils/roles';
 
@@ -29,7 +30,7 @@ export class CreateUserDto {
   phone?: string;
 
   @IsOptional()
-  @IsString()
+  @IsUrl({ require_valid_protocol: true })
   shopUrl?: string;
 
   @IsOptional()

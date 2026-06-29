@@ -5,13 +5,13 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './user.entity';
+import { User } from './entities/user.entity';
 import { IUser } from 'src/utils/user';
-import { CreateUserDto } from './create-user.dto';
+import { CreateUserDto } from './dto/create-user.dto';
 import { Roles } from 'src/utils/roles';
 import { v4 as uuidv4 } from 'uuid';
 import * as bcrypt from 'bcryptjs';
-import { UpdateProfileDto } from './update-profile.dto';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -20,41 +20,12 @@ export class UsersService {
     private usersRepository: Repository<User>,
   ) {}
 
-  private normalize(user: IUser): IUser {
-    const {
-      id,
-      name,
-      email,
-      role,
-      balance,
-      phone,
-      isBlocked,
-      isApproved,
-      shopUrl,
-      salesChannel,
-      experience,
-    } = user;
-    return {
-      id,
-      name,
-      email,
-      role,
-      balance,
-      phone,
-      isBlocked,
-      isApproved: isApproved !== false,
-      shopUrl: shopUrl || null,
-      salesChannel: salesChannel || null,
-      experience: experience || null,
-    };
+  async findByEmail(email: string) {
+    return await this.usersRepository.findOne({ where: { email } });
   }
 
-  findByEmail(email: string) {
-    return this.usersRepository.findOne({ where: { email } });
-  }
-
-  findById(id: string) {
-    return this.usersRepository.findOneBy({ id });
+  async findById(id: string) {
+    return await this.usersRepository.findOne({ where: { id } });
   }
 
   async getProfile(userId: string): Promise<IUser> {
@@ -62,7 +33,7 @@ export class UsersService {
     if (!user) {
       throw new NotFoundException('User not found');
     }
-    return this.normalize(user);
+    return user;
   }
 
   async updateProfile(
@@ -115,7 +86,7 @@ export class UsersService {
 
     const updatedUser = await this.usersRepository.save(user);
 
-    return this.normalize(updatedUser);
+    return updatedUser;
   }
 
   async register(createUserDto: CreateUserDto) {
@@ -172,5 +143,17 @@ export class UsersService {
       password: hashedPassword,
       resetToken: null,
     });
+  }
+
+  async delete(id: string) {
+    const user = await this.findById(id);
+
+    if (!user) {
+      throw new NotFoundException('User with that id doesnt exist');
+    }
+
+    await this.usersRepository.remove(user);
+
+    return user.id;
   }
 }
