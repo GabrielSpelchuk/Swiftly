@@ -1,4 +1,5 @@
-import { CartItem } from 'src/cart-items/entities/cart-item.entity';
+import { IsUUID } from 'class-validator';
+import { CartItem } from './cart-item.entity';
 import { User } from 'src/users/entities/user.entity';
 import {
   Column,
@@ -16,12 +17,16 @@ export class Cart {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @OneToOne(() => User)
-  @JoinColumn({ name: 'userId' })
-  user;
+  @Column({ name: 'user_id', type: 'uuid' })
+  @IsUUID('4')
+  userId!: string;
 
-  @OneToMany(() => CartItem, (cartItem) => cartItem.cart as string)
-  items;
+  @OneToOne(() => User)
+  @JoinColumn({ name: 'user_id' })
+  user!: User;
+
+  @OneToMany(() => CartItem, (cartItem) => cartItem.cart)
+  items!: CartItem[];
 
   @Column({ name: 'created_at' })
   @CreateDateColumn()

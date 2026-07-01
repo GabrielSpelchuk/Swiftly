@@ -65,15 +65,20 @@ export class Product {
 
   @Column({ name: 'supplier_id', type: 'uuid' })
   @IsUUID('4')
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'supplier_id' })
   supplierId!: string;
 
-  @Column({ name: 'category', nullable: true })
-  @IsString()
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'supplier_id' })
+  supplier!: User;
+
+  @Column({ name: 'category_id', nullable: true })
+  @IsOptional()
+  @IsUUID('4')
+  categoryId!: string;
+
   @ManyToOne(() => Category)
-  @JoinColumn({ name: 'category' })
-  category!: string;
+  @JoinColumn({ name: 'category_id' })
+  category!: Category;
 
   @Column({ name: 'created_at' })
   @CreateDateColumn()

@@ -74,18 +74,22 @@ export class Order {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @Column({ name: 'placed_by' })
+  @Column({ name: 'placed_by', type: 'uuid' })
   @IsUUID('4')
+  placedById!: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'placed_by' })
-  palcedBy!: string;
+  placedBy!: User;
 
-  @Column({ name: 'supplier_id' })
+  @Column({ name: 'supplier_id', type: 'uuid' })
   @IsUUID('4')
-  @ManyToOne(() => User)
-  @JoinColumn({ name: 'supplier_id' })
   supplierId!: string;
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.orderId)
-  items;
+  @ManyToOne(() => User)
+  @JoinColumn({ name: 'supplier_id' })
+  supplier!: User;
+
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
+  items!: OrderItem[];
 }

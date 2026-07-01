@@ -37,14 +37,21 @@ export class OrderItem {
   @UpdateDateColumn()
   updatedAt!: Date;
 
-  @Column({ name: 'order_id' })
+  @Column({ name: 'order_id', type: 'uuid' })
   @IsUUID('4')
-  @ManyToOne(() => Order, (order) => order.items as string)
-  @JoinColumn({ name: 'order_id' })
   orderId!: string;
 
-  @Column({ name: 'product_id' })
+  @ManyToOne(() => Order, (order) => order.items as string, {
+    onDelete: 'CASCADE',
+  })
+  @JoinColumn({ name: 'order_id' })
+  order!: Order;
+
+  @Column({ name: 'product_id', type: 'uuid' })
+  @IsUUID('4')
+  productId!: string;
+
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
-  product!: string;
+  product!: Product;
 }
