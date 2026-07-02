@@ -27,7 +27,9 @@ export class Token {
 
   @Column({ name: 'user_id' })
   @IsUUID('4')
+  userId!: string;
+
   @ManyToOne(() => User)
   @JoinColumn({ name: 'user_id' })
-  userId!: string;
+  user!: User;
 }

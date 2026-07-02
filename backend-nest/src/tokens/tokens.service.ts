@@ -1,26 +1,29 @@
 import { Injectable } from '@nestjs/common';
 import { CreateTokenDto } from './dto/create-token.dto';
-import { UpdateTokenDto } from './dto/update-token.dto';
+import { Repository } from 'typeorm';
+import { Token } from './entities/token.entity';
 
 @Injectable()
 export class TokensService {
-  create(createTokenDto: CreateTokenDto) {
-    return 'This action adds a new token';
+  constructor(private tokensRepository: Repository<Token>) {}
+
+  async save({ userId, refreshToken }: CreateTokenDto) {
+    const token = await this.tokensRepository.findOne({ where: { userId } });
+
+    if (!token) {
+      this.tokensRepository.create({ userId, refreshToken });
+      return;
+    }
+
+    token.refreshToken = refreshToken;
+    await this.tokensRepository.save(token);
   }
 
-  findAll() {
-    return `This action returns all tokens`;
+  getByToken(refreshToken: string) {
+    return this.tokensRepository.findOne({ where: { refreshToken } });
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} token`;
-  }
-
-  update(id: number, updateTokenDto: UpdateTokenDto) {
-    return `This action updates a #${id} token`;
-  }
-
-  remove(id: number) {
-    return `This action removes a #${id} token`;
+  async remove(userId: string) {
+    await this.tokensRepository.delete(userId);
   }
 }
