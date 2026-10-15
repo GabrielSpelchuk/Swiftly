@@ -254,6 +254,7 @@ npm start
 | `CLIENT_HOST` | `http://localhost:3000` | Домен фронтенду. Кілька доменів — через кому |
 | `DB_HOST` / `DB_PORT` | `localhost` / `5432` | Підключення до PostgreSQL |
 | `DB_USER` / `DB_PASSWORD` / `DB_NAME` | `postgres` / `12345` / `Swiftly` | Облікові дані БД |
+| `DB_SSL` | `false` | `true` для керованих БД (Neon, Supabase, RDS). Без цього з'єднання падає |
 | `DB_SYNCHRONIZE` | `false` | Синхронізація затирає дані. У production **завжди** `false` |
 | `JWT_SECRET` | — | Секрет підпису access-токенів |
 | `JWT_EXPIRES_IN` | `15m` | Життя access-токена |

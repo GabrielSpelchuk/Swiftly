@@ -12,6 +12,10 @@ export default new DataSource({
   username: process.env.DB_USER ?? 'postgres',
   password: process.env.DB_PASSWORD ?? '12345',
   database: process.env.DB_NAME ?? 'Swiftly',
+  // Те саме, що й у app.module: керовані БД (Neon, Supabase, RDS)
+  // вимагають SSL, локальний Postgres — ні.
+  ssl:
+    process.env.DB_SSL === 'true' ? { rejectUnauthorized: false } : false,
   // Потрібно знати, звільні ми запустились із TS (ts-node, розробка)
   // чи з зібраного JS (production, де ts-node немає).
   // Раніше глоб був '**/*.entity{.ts,.js}' — він чіпляв одночасно
