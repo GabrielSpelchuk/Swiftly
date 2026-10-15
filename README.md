@@ -261,7 +261,9 @@ npm start
 | `JWT_REFRESH_SECRET` | — | Секрет refresh-токенів. Має відрізнятися від `JWT_SECRET` |
 | `JWT_REFRESH_EXPIRES_IN` | `30d` | Життя refresh-токена |
 | `SWAGGER_ENABLED` | — | `true` вмикає Swagger навіть у production (тільки за HTTPS) |
-| `MAIL_HOST` та ін. | — | SMTP. Порожній `MAIL_HOST` → листи логуються, а не надсилаються |
+| `RESEND_API_KEY` | — | Ключ Resend. Має пріоритет над SMTP |
+| `RESEND_FROM` | — | Відправник для Resend |
+| `MAIL_HOST` та ін. | — | Запасний SMTP. Порожній → листи логуються, а посилання друкуються в лог |
 | `APP_URL` | `http://localhost:3000` | Адреса застосунку для посилань у листах |
 
 ### Фронтенд (`frontend/.env`)
