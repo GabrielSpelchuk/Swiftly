@@ -87,8 +87,10 @@ export function ProductFormPage() {
       wholesalePrice: Number(form.wholesalePrice),
       retailPrice:    Number(form.retailPrice),
       stock:          Number(form.stock) || 0,
-      categoryId:     form.categoryId !== '' ? Number(form.categoryId) : null,
-      images:         form.images, 
+      // categoryId — це UUID, тому рядок. Number() тут дає NaN,
+      // і бекенд відповідав 400.
+      categoryId:     form.categoryId !== '' ? form.categoryId : null,
+      images:         form.images,
     };
 
     setSaving(true);

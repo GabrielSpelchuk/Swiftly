@@ -5,7 +5,7 @@ import { StatCard } from '../../components/dashboard/StatCard';
 import { OrderCard } from '../../components/orders/OrderCard';
 import { Button } from '../../components/common/Button';
 import { Spinner } from '../../components/common/Spinner';
-import { formatPrice } from '../../utils/format';
+import { formatPrice, formatPriceExact, formatPercent } from '../../utils/format';
 import { toast } from 'react-toastify';
 import './Dashboard.css';
 
@@ -81,44 +81,68 @@ export function SupplierDashboard() {
       {activeTab === 'products' && (
         <div className="dashboard__section">
           <div className="products-table">
-            <div className="products-table__head" style={{ gridTemplateColumns: '48px 1fr 1fr 1fr 1fr 1fr auto' }}>
-              <span></span><span>Назва</span><span>Гурт</span><span>Роздріб</span><span>Залишок</span><span>Статус</span><span>Дії</span>
+            <div className="products-table__head">
+              <span></span>
+              <span>Назва</span>
+              <span className="products-table__num">Гурт</span>
+              <span className="products-table__num">Роздріб</span>
+              <span className="products-table__num">Маржа</span>
+              <span className="products-table__num">Залишок</span>
+              <span>Статус</span>
+              <span>Дії</span>
             </div>
             {products.length === 0 ? (
-              <div className="dashboard__empty">Товарів ще немає</div>
-            ) : products.map((p) => (
-              <div key={p.id} className="products-table__row" style={{ gridTemplateColumns: '48px 1fr 1fr 1fr 1fr 1fr auto' }}>
-                {p.images?.[0] ? (
-                  <img
-                    src={p.images[0]}
-                    alt=""
-                    style={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 6, border: '1px solid var(--border)' }}
-                    onError={(e) => { e.target.style.display = 'none'; }}
-                  />
-                ) : (
-                  <span style={{ fontSize: 20, opacity: 0.3 }}>📷</span>
-                )}
-                <span className="products-table__name">{p.name}</span>
-                <span>{formatPrice(p.wholesalePrice)}</span>
-                <span>{formatPrice(p.retailPrice)}</span>
-                <span style={{ color: p.stock === 0 ? 'var(--danger)' : 'inherit' }}>{p.stock}</span>
-                <span style={{ color: p.isActive ? 'var(--success)' : 'var(--text-muted)' }}>
-                  {p.isActive ? 'Активний' : 'Прихований'}
-                </span>
-                <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
-                  <Link to={`/dashboard/supplier/products/${p.id}/edit`}>
-                    <Button variant="secondary" size="sm">Редагувати</Button>
-                  </Link>
-                  <Button
-                    variant="danger"
-                    size="sm"
-                    onClick={() => handleDeleteProduct(p.id, p.name)}
+              <div className="dashboard__empty products-table__empty">Товарів ще немає</div>
+            ) : products.map((p) => {
+              const wholesale = Number(p.wholesalePrice) || 0;
+              const retail = Number(p.retailPrice) || 0;
+              const margin = wholesale > 0 ? ((retail - wholesale) / wholesale) * 100 : null;
+
+              return (
+                <div key={p.id} className="products-table__row">
+                  {p.images?.[0] ? (
+                    <img
+                      src={p.images[0]}
+                      alt=""
+                      className="products-table__thumb"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  ) : (
+                    <span style={{ fontSize: 20, opacity: 0.3 }}>📷</span>
+                  )}
+                  <span className="products-table__name" title={p.name}>{p.name}</span>
+                  <span className="products-table__cell products-table__num">{formatPriceExact(p.wholesalePrice)}</span>
+                  <span className="products-table__cell products-table__num">{formatPriceExact(p.retailPrice)}</span>
+                  <span
+                    className="products-table__cell products-table__num"
+                    style={{ color: margin === null ? 'var(--text-muted)' : margin > 0 ? 'var(--success)' : 'var(--danger)' }}
                   >
-                    Видалити
-                  </Button>
+                    {margin === null ? '—' : formatPercent(margin)}
+                  </span>
+                  <span
+                    className="products-table__cell products-table__num"
+                    style={{ color: p.stock === 0 ? 'var(--danger)' : 'inherit' }}
+                  >
+                    {p.stock}
+                  </span>
+                  <span className="products-table__cell" style={{ color: p.isActive ? 'var(--success)' : 'var(--text-muted)' }}>
+                    {p.isActive ? 'Активний' : 'Прихований'}
+                  </span>
+                  <div style={{ display: 'flex', gap: 8 }}>
+                    <Link to={`/dashboard/supplier/products/${p.id}/edit`}>
+                      <Button variant="secondary" size="sm">Редагувати</Button>
+                    </Link>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => handleDeleteProduct(p.id, p.name)}
+                    >
+                      Видалити
+                    </Button>
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       )}

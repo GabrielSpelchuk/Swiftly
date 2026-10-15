@@ -34,7 +34,6 @@ export const refreshThunk = createAsyncThunk('auth/refresh', async (_, { rejectW
     localStorage.setItem('accessToken', data.accessToken);
     return data.user;
   } catch {
-    localStorage.removeItem('accessToken');
     return rejectWithValue(null);
   }
 });
@@ -63,7 +62,12 @@ const authSlice = createSlice({
 
       .addCase(refreshThunk.pending,   (s) => { s.isLoading = true; })
       .addCase(refreshThunk.fulfilled, (s, { payload }) => { s.isLoading = false; s.user = payload; })
-      .addCase(refreshThunk.rejected,  (s) => { s.isLoading = false; s.user = null; });
+      .addCase(refreshThunk.rejected,  (s) => {
+        s.isLoading = false;
+        if (!localStorage.getItem('accessToken')) {
+          s.user = null;
+        }
+      });
   },
 });
 

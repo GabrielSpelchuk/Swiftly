@@ -50,7 +50,10 @@ export function CartPage() {
           customerName:    form.customerName,
           customerPhone:   form.customerPhone,
           customerAddress: form.customerAddress,
-          supplierId:      Number(supplierId),
+          // Ключ об'єкта — це завжди рядок, і supplierId це UUID.
+          // Number(uuid) дає NaN, і бекенд відповідав
+          // "supplierId must be a uuid".
+          supplierId,
           items:           orderItems,
         });
       }

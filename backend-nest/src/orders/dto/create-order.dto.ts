@@ -3,7 +3,6 @@ import {
   ArrayMaxSize,
   ArrayMinSize,
   IsArray,
-  IsEnum,
   IsOptional,
   IsString,
   IsUUID,
@@ -12,7 +11,6 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
-import { ORDER_SOURCE } from '../../utils/orderSource';
 
 export class CreateOrderItemDto {
   @IsUUID('4')
@@ -24,9 +22,6 @@ export class CreateOrderItemDto {
 }
 
 export class CreateOrderDto {
-  @IsEnum(ORDER_SOURCE)
-  source!: ORDER_SOURCE;
-
   @IsString()
   @MinLength(2)
   @MaxLength(100)
@@ -51,9 +46,6 @@ export class CreateOrderDto {
   @IsString()
   @MaxLength(2000)
   notes?: string;
-
-  @IsUUID('4')
-  placedById!: string;
 
   @IsUUID('4')
   supplierId!: string;

@@ -18,8 +18,15 @@ export const userApi = {
 };
 
 // ── Products ──────────────────────────────────────────
+const cleanParams = (params = {}) =>
+  Object.fromEntries(
+    Object.entries(params).filter(
+      ([, value]) => value !== '' && value !== null && value !== undefined,
+    ),
+  );
+
 export const productApi = {
-  getAll: (params) => api.get('/products', { params }),
+  getAll: (params) => api.get('/products', { params: cleanParams(params) }),
   getOne: (id) => api.get(`/products/${id}`),
   getMine: () => api.get('/products/my/list'),
   create: (data) => api.post('/products', data),

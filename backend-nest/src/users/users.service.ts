@@ -28,6 +28,34 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { id } });
   }
 
+  async findWithPassword(
+    id: string,
+  ): Promise<Pick<User, 'id' | 'password'> | null> {
+    return this.usersRepository.findOne({
+      where: { id },
+      select: { id: true, password: true },
+    });
+  }
+
+  async findByEmailWithPassword(
+    email: string,
+  ): Promise<(Pick<User, 'id' | 'password'> & Partial<User>) | null> {
+    return this.usersRepository.findOne({
+      where: { email },
+      select: {
+        id: true,
+        password: true,
+        email: true,
+        name: true,
+        role: true,
+        activationToken: true,
+        isBlocked: true,
+        balance: true,
+        isApproved: true,
+      },
+    });
+  }
+
   async getProfile(userId: string): Promise<User> {
     const user = await this.findById(userId);
 

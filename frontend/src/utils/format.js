@@ -1,6 +1,15 @@
 export const formatPrice = (price) =>
   new Intl.NumberFormat('uk-UA', { style: 'currency', currency: 'UAH', maximumFractionDigits: 0 }).format(price);
 
+export const formatPriceExact = (price) =>
+  new Intl.NumberFormat('uk-UA', {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(Number(price)) + ' ₴';
+
+export const formatPercent = (value) =>
+  `${value > 0 ? '+' : ''}${Math.round(value)}%`;
+
 export const formatDate = (dateStr) =>
   new Intl.DateTimeFormat('uk-UA', { day: '2-digit', month: 'short', year: 'numeric' }).format(new Date(dateStr));
 

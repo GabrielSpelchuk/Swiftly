@@ -16,73 +16,76 @@ import { ProductsService } from './products.service';
 import { CreateProductDto } from './dto/create-product.dto';
 import { UpdateProductDto } from './dto/update-product.dto';
 import { GetProductQueryDto } from './dto/get-product-query.dto';
-import { CurrentUser } from '../users/current-user.decorator';
-import { User } from '../users/entities/user.entity';
-import { Roles } from '../utils/roles';
+import { CurrentUser } from '../common/decorators/current-user.decorator';
+import { Public } from '../common/decorators/public.decorator';
+import { Roles } from '../common/decorators/roles.decorator';
+import type { AuthUser } from '../common/decorators/current-user.decorator';
+import { Roles as Role } from '../utils/roles';
+
+function canSeeWholesale(user?: AuthUser): boolean {
+  return (
+    user?.role === Role.dropshipper ||
+    user?.role === Role.supplier ||
+    user?.role === Role.admin
+  );
+}
 
 @Controller('products')
 export class ProductsController {
   constructor(private readonly productsService: ProductsService) {}
 
+  @Public()
   @Get()
-  findAll(@Query() query: GetProductQueryDto, @CurrentUser() user: User) {
-    return this.productsService.findAll(query, user.role === Roles.dropshipper);
+  findAll(@Query() query: GetProductQueryDto, @CurrentUser() user?: AuthUser) {
+    return this.productsService.findAll(query, canSeeWholesale(user));
   }
 
+  @Roles(Role.supplier, Role.admin)
   @Get('my/list')
-  findMine(@CurrentUser() user: User) {
+  findMine(@CurrentUser() user: AuthUser) {
     return this.productsService.findBySupplier(user.id, true);
   }
 
+  @Public()
   @Get(':id')
-  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
-    return this.productsService.findById(id, user.role === Roles.dropshipper);
+  findOne(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user?: AuthUser) {
+    return this.productsService.findById(id, canSeeWholesale(user));
   }
 
+  @Roles(Role.supplier)
   @Post()
   @HttpCode(HttpStatus.CREATED)
   create(
     @Body() createProductDto: CreateProductDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.productsService.create(
-      createProductDto,
-      user.id,
-      user.role === Roles.dropshipper,
-    );
+    return this.productsService.create(createProductDto, user.id, true);
   }
 
+  @Roles(Role.supplier)
   @Put(':id')
   update(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.productsService.update(
-      id,
-      user.id,
-      updateProductDto,
-      user.role === Roles.dropshipper,
-    );
+    return this.productsService.update(id, user.id, updateProductDto, true);
   }
 
+  @Roles(Role.supplier)
   @Patch(':id')
   updatePartial(
     @Param('id', ParseUUIDPipe) id: string,
     @Body() updateProductDto: UpdateProductDto,
-    @CurrentUser() user: User,
+    @CurrentUser() user: AuthUser,
   ) {
-    return this.productsService.update(
-      id,
-      user.id,
-      updateProductDto,
-      user.role === Roles.dropshipper,
-    );
+    return this.productsService.update(id, user.id, updateProductDto, true);
   }
 
+  @Roles(Role.supplier)
   @Delete(':id')
   @HttpCode(HttpStatus.NO_CONTENT)
-  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: User) {
+  remove(@Param('id', ParseUUIDPipe) id: string, @CurrentUser() user: AuthUser) {
     return this.productsService.remove(id, user.id);
   }
 }

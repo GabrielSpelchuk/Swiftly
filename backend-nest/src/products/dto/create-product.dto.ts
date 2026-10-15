@@ -47,7 +47,13 @@ export class CreateProductDto {
   @IsString({ each: true })
   images?: string[];
 
+  // Назва поля збігається з entity (Product.categoryId) і з тим,
+  // що бекенд повертає у відповіді. Раніше тут було "category" —
+  // через що фронтенд (який надсилає categoryId) отримував
+  // 400 "property categoryId should not exist" на кожному створенні.
+  //
+  // Значення — рядок UUID. number() тут неприпустимий: Number(uuid) = NaN.
   @IsOptional()
-  @IsUUID('4')
-  category?: string;
+  @IsUUID('4', { message: 'categoryId must be a UUID or null' })
+  categoryId?: string | null;
 }

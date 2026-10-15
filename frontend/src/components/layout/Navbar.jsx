@@ -19,8 +19,6 @@ export function Navbar() {
     navigate('/');
   };
 
-  const dashboardPath = isAdmin ? '/dashboard/admin' : isSupplier ? '/dashboard/supplier' : '/dashboard/dropshipper';
-
   return (
     <nav className="navbar">
       <div className="navbar__inner container">
@@ -31,14 +29,25 @@ export function Navbar() {
 
         <div className="navbar__links">
           <Link to="/catalog" className={`navbar__link ${location.pathname.startsWith('/catalog') ? 'navbar__link--active' : ''}`}>Каталог</Link>
-          {isLoggedIn && (isDropshipper || isAdmin) && (
-            <Link to="/dashboard/dropshipper" className={`navbar__link ${location.pathname.startsWith('/dashboard') ? 'navbar__link--active' : ''}`}>Панель</Link>
+
+          {/*
+            Рівно одна вкладка "Панель" на роль.
+
+            Раніше умова була (isDropshipper || isAdmin), тому адмін бачив
+            одночасно "Панель" і "Адмін". Причому "Панель" вела на
+            /dashboard/dropshipper, а цей маршрут закритий roles={['dropshipper']} —
+            тобто клік просто перекидав на головну. Мертве посилання.
+          */}
+          {isLoggedIn && isAdmin && (
+            <Link to="/dashboard/admin" className={`navbar__link ${location.pathname.startsWith('/dashboard/admin') ? 'navbar__link--active' : ''}`}>Панель</Link>
           )}
-          {isLoggedIn && isSupplier && (
+
+          {isLoggedIn && !isAdmin && isSupplier && (
             <Link to="/dashboard/supplier" className={`navbar__link ${location.pathname.startsWith('/dashboard') ? 'navbar__link--active' : ''}`}>Панель</Link>
           )}
-          {isAdmin && (
-            <Link to="/dashboard/admin" className={`navbar__link ${location.pathname.startsWith('/dashboard/admin') ? 'navbar__link--active' : ''}`}>Адмін</Link>
+
+          {isLoggedIn && !isAdmin && isDropshipper && (
+            <Link to="/dashboard/dropshipper" className={`navbar__link ${location.pathname.startsWith('/dashboard') ? 'navbar__link--active' : ''}`}>Панель</Link>
           )}
         </div>
 

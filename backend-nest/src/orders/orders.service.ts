@@ -15,6 +15,7 @@ import { UpdateOrderDto } from './dto/update-order.dto';
 import { ORDER_SOURCE } from '../utils/orderSource';
 import { ORDER_STATUS } from '../utils/orderStatus';
 import { Roles } from '../utils/roles';
+import { MailService } from '../mail/mail.service';
 
 @Injectable()
 export class OrdersService {
@@ -22,15 +23,20 @@ export class OrdersService {
     private readonly dataSource: DataSource,
     @InjectRepository(Order)
     private readonly ordersRepository: Repository<Order>,
+    @InjectRepository(User)
+    private readonly usersRepository: Repository<User>,
+    private readonly mailService: MailService,
   ) {}
 
   async create(
     createOrderDto: CreateOrderDto,
     placedById: string,
     supplierId: string,
+    role: Roles,
   ): Promise<Order> {
-    const { source, items, notes, trackingNumber, ...customerInfo } =
-      createOrderDto;
+    const { items, notes, trackingNumber, ...customerInfo } = createOrderDto;
+
+    const source = this.resolveSource(role);
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
@@ -127,6 +133,10 @@ export class OrdersService {
     }
   }
 
+  private resolveSource(role: Roles): ORDER_SOURCE {
+    return role === Roles.dropshipper ? ORDER_SOURCE.B2B : ORDER_SOURCE.B2C;
+  }
+
   private async decrementStock(
     manager: EntityManager,
     items: CreateOrderDto['items'],
@@ -149,14 +159,21 @@ export class OrdersService {
   }
 
   async findByUser(userId: string, role: Roles): Promise<Order[]> {
+    // Хто що бачить:
+    //   supplier     -> замовлення, які ВІН має виконати (supplierId)
+    //   dropshipper  -> замовлення, які ВІН оформив (placedById)
+    //   customer     -> замовлення, які ВІН оформив (placedById)
+    //   admin        -> усі
     const where =
-      role === Roles.dropshipper
+      role === Roles.supplier
         ? { supplierId: userId }
-        : { placedById: userId };
+        : role === Roles.admin
+          ? {}
+          : { placedById: userId };
 
     return this.ordersRepository.find({
       where,
-      relations: { placedBy: true, items: { product: true } },
+      relations: { placedBy: true, supplier: true, items: { product: true } },
       order: { createdAt: 'DESC' },
     });
   }
@@ -207,7 +224,21 @@ export class OrdersService {
       order.trackingNumber = updateOrderDto.trackingNumber || null;
     }
 
-    return this.ordersRepository.save(order);
+    const saved = await this.ordersRepository.save(order);
+
+    const customer = await this.usersRepository.findOne({
+      where: { id: saved.placedById },
+    });
+
+    if (customer) {
+      await this.mailService.sendOrderStatusEmail(
+        customer.email,
+        saved.status,
+        saved.trackingNumber,
+      );
+    }
+
+    return saved;
   }
 
   async remove(id: string, userId: string, role: Roles): Promise<string> {
