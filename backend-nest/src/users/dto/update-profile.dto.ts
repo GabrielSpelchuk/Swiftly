@@ -1,14 +1,21 @@
-import { IsEmail, IsOptional, IsString, MinLength } from 'class-validator';
-import { CreateUserDto } from './create-user.dto';
-import { PartialType } from '@nestjs/mapped-types';
+import {
+  IsEmail,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-export class UpdateProfileDto extends PartialType(CreateUserDto) {
+export class UpdateProfileDto {
   @IsOptional()
   @IsString()
+  @MinLength(3, { message: 'Name must consist of 3 or more characters' })
+  @MaxLength(100)
   name?: string;
 
   @IsOptional()
   @IsString()
+  @MaxLength(30)
   phone?: string;
 
   @IsOptional()

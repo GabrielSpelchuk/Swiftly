@@ -1,29 +1,37 @@
 import { Injectable } from '@nestjs/common';
-import { CreateTokenDto } from './dto/create-token.dto';
+import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Token } from './entities/token.entity';
 
 @Injectable()
 export class TokensService {
-  constructor(private tokensRepository: Repository<Token>) {}
+  constructor(
+    @InjectRepository(Token)
+    private readonly tokensRepository: Repository<Token>,
+  ) {}
 
-  async save({ userId, refreshToken }: CreateTokenDto) {
+  async save(userId: string, refreshToken: string): Promise<Token> {
     const token = await this.tokensRepository.findOne({ where: { userId } });
 
     if (!token) {
-      this.tokensRepository.create({ userId, refreshToken });
-      return;
+      return this.tokensRepository.save(
+        this.tokensRepository.create({ userId, refreshToken }),
+      );
     }
 
     token.refreshToken = refreshToken;
-    await this.tokensRepository.save(token);
+    return this.tokensRepository.save(token);
   }
 
-  getByToken(refreshToken: string) {
+  findByToken(refreshToken: string): Promise<Token | null> {
     return this.tokensRepository.findOne({ where: { refreshToken } });
   }
 
-  async remove(userId: string) {
-    await this.tokensRepository.delete(userId);
+  async removeByToken(refreshToken: string): Promise<void> {
+    await this.tokensRepository.delete({ refreshToken });
+  }
+
+  async removeByUserId(userId: string): Promise<void> {
+    await this.tokensRepository.delete({ userId });
   }
 }

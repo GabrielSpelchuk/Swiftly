@@ -1,95 +1,78 @@
 import {
-  IsDecimal,
-  IsEnum,
-  IsString,
-  IsUUID,
-  MaxLength,
-} from 'class-validator';
-import { OrderItem } from 'src/order-items/entities/order-item.entity';
-import { User } from 'src/users/entities/user.entity';
-import { ORDER_SOURCE } from 'src/utils/orderSource';
-import { ORDER_STATUS } from 'src/utils/orderStatus';
-import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { OrderItem } from '../../order-items/entities/order-item.entity';
+import { User } from '../../users/entities/user.entity';
+import { ORDER_SOURCE } from '../../utils/orderSource';
+import { ORDER_STATUS } from '../../utils/orderStatus';
 
 @Entity({ name: 'orders' })
+@Index(['placedById'])
+@Index(['supplierId'])
 export class Order {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
   @Column({ type: 'enum', enum: ORDER_STATUS, default: ORDER_STATUS.NEW })
-  @IsEnum(ORDER_STATUS)
   status!: ORDER_STATUS;
 
   @Column({ type: 'enum', enum: ORDER_SOURCE })
-  @IsEnum(ORDER_SOURCE)
   source!: ORDER_SOURCE;
 
   @Column({ name: 'customer_name' })
-  @IsString()
   customerName!: string;
 
   @Column({ name: 'customer_phone' })
-  @IsString()
   customerPhone!: string;
 
-  @Column({ name: 'customer_address' })
-  @IsString()
+  @Column({ name: 'customer_address', type: 'text' })
   customerAddress!: string;
 
-  @Column({ name: 'tracking_number', nullable: true })
-  @IsString()
-  trackingNumber!: string;
+  @Column({ name: 'tracking_number', type: 'varchar', nullable: true })
+  trackingNumber!: string | null;
 
-  @Column({ name: 'total_wholesale', type: 'decimal', scale: 2 })
-  @IsDecimal()
+  @Column({ type: 'text', nullable: true })
+  notes!: string | null;
+
+  @Column({ name: 'total_wholesale', type: 'decimal', precision: 12, scale: 2 })
   totalWholesale!: number;
 
-  @Column({ name: 'total_retail', type: 'decimal', scale: 2 })
-  @IsDecimal()
+  @Column({ name: 'total_retail', type: 'decimal', precision: 12, scale: 2 })
   totalRetail!: number;
 
-  @Column({ type: 'decimal', scale: 2, default: 0 })
-  @IsDecimal()
+  @Column({ type: 'decimal', precision: 12, scale: 2, default: 0 })
   profit!: number;
 
-  @Column()
-  @IsString()
-  @MaxLength(255)
-  notes!: string;
-
-  @Column({ name: 'created_at' })
-  @CreateDateColumn()
-  createdAt!: Date;
-
-  @Column({ name: 'updated_at' })
-  @UpdateDateColumn()
-  updatedAt!: Date;
-
   @Column({ name: 'placed_by', type: 'uuid' })
-  @IsUUID('4')
   placedById!: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.placedOrders, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'placed_by' })
   placedBy!: User;
 
   @Column({ name: 'supplier_id', type: 'uuid' })
-  @IsUUID('4')
   supplierId!: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.supplierOrders, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'supplier_id' })
   supplier!: User;
 
-  @OneToMany(() => OrderItem, (orderItem) => orderItem.order)
+  @OneToMany(() => OrderItem, (orderItem) => orderItem.order, {
+    cascade: true,
+  })
   items!: OrderItem[];
+
+  @CreateDateColumn({ name: 'created_at' })
+  createdAt!: Date;
+
+  @UpdateDateColumn({ name: 'updated_at' })
+  updatedAt!: Date;
 }

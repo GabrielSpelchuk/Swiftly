@@ -1,36 +1,36 @@
-import { IsNotEmpty, IsString, Length, MaxLength } from 'class-validator';
 import {
   Column,
   CreateDateColumn,
   Entity,
-  PrimaryColumn,
+  Index,
+  OneToMany,
+  PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity({ name: 'categories' })
 export class Category {
-  @Column({ unique: true })
-  @IsNotEmpty()
-  @IsString()
-  @Length(3, 25)
+  @PrimaryGeneratedColumn('uuid')
+  id!: string;
+
+  @Index({ unique: true })
+  @Column()
   name!: string;
 
-  @PrimaryColumn({ unique: true })
-  @IsNotEmpty()
-  @IsString()
-  @Length(3, 25)
+  @Index({ unique: true })
+  @Column()
   slug!: string;
 
-  @Column({ nullable: true })
-  @IsString()
-  @MaxLength(255)
-  description!: string;
+  @Column({ type: 'text', nullable: true })
+  description!: string | null;
 
-  @Column({ name: 'created_at' })
-  @CreateDateColumn()
+  @OneToMany(() => Product, (product) => product.category)
+  products!: Product[];
+
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
-  @Column({ name: 'updated_at' })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }

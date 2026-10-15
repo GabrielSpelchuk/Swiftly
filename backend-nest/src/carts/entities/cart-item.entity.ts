@@ -1,47 +1,43 @@
-import { IsInt, IsUUID, Min } from 'class-validator';
-import { Cart } from './cart.entity';
-import { Product } from 'src/products/entities/product.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Cart } from './cart.entity';
+import { Product } from '../../products/entities/product.entity';
 
 @Entity({ name: 'cart_items' })
+@Index(['cartId'])
+@Index(['productId'])
 export class CartItem {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
-  @Column({ type: 'int', nullable: false, default: 1 })
-  @IsInt()
-  @Min(1)
+  @Column({ type: 'int', default: 1 })
   quantity!: number;
 
   @Column({ name: 'cart_id', type: 'uuid' })
-  @IsUUID('4')
   cartId!: string;
 
-  @ManyToOne(() => Cart, (cart) => cart.items)
+  @ManyToOne(() => Cart, (cart) => cart.items, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'cart_id' })
   cart!: Cart;
 
   @Column({ name: 'product_id', type: 'uuid' })
-  @IsUUID('4')
   productId!: string;
 
   @ManyToOne(() => Product)
   @JoinColumn({ name: 'product_id' })
   product!: Product;
 
-  @Column({ name: 'created_at' })
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
-  @Column({ name: 'updated_at' })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }

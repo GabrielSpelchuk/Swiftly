@@ -1,45 +1,88 @@
 import {
   BadRequestException,
+  ConflictException,
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { User } from './entities/user.entity';
-import { IUser } from 'src/utils/user';
-import { CreateUserDto } from './dto/create-user.dto';
-import { Roles } from 'src/utils/roles';
-import { v4 as uuidv4 } from 'uuid';
+import { randomUUID } from 'crypto';
 import * as bcrypt from 'bcryptjs';
+import { User } from './entities/user.entity';
+import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateProfileDto } from './dto/update-profile.dto';
+import { Roles } from '../utils/roles';
 
 @Injectable()
 export class UsersService {
   constructor(
     @InjectRepository(User)
-    private usersRepository: Repository<User>,
+    private readonly usersRepository: Repository<User>,
   ) {}
 
-  async findByEmail(email: string) {
-    return await this.usersRepository.findOne({ where: { email } });
+  async findByEmail(email: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { email } });
   }
 
-  async findById(id: string) {
-    return await this.usersRepository.findOne({ where: { id } });
+  async findById(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
   }
 
-  async getProfile(userId: string): Promise<IUser> {
+  async getProfile(userId: string): Promise<User> {
     const user = await this.findById(userId);
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
+
     return user;
+  }
+
+  async register(createUserDto: CreateUserDto): Promise<User> {
+    const {
+      name,
+      email,
+      password,
+      role = Roles.customer,
+      phone,
+      shopUrl,
+      salesChannel,
+      experience,
+    } = createUserDto;
+
+    const existUser = await this.findByEmail(email);
+
+    if (existUser) {
+      throw new ConflictException('Email is already registered');
+    }
+
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(password, salt);
+
+    const activationToken = randomUUID();
+    const isDropshipper = role === Roles.dropshipper;
+
+    const user = this.usersRepository.create({
+      name: name.trim(),
+      email: email.trim().toLowerCase(),
+      password: hashedPassword,
+      activationToken,
+      role,
+
+      isApproved: !isDropshipper,
+      phone: isDropshipper ? phone?.trim() : null,
+      shopUrl: isDropshipper ? shopUrl?.trim() : null,
+      salesChannel: isDropshipper ? salesChannel : null,
+      experience: isDropshipper ? experience?.trim() : null,
+    });
+
+    return this.usersRepository.save(user);
   }
 
   async updateProfile(
     userId: string,
     updateProfileDto: UpdateProfileDto,
-  ): Promise<IUser> {
+  ): Promise<User> {
     const {
       name,
       phone,
@@ -50,102 +93,87 @@ export class UsersService {
     } = updateProfileDto;
 
     const user = await this.findById(userId);
+
     if (!user) {
       throw new NotFoundException('User not found');
     }
 
-    if (newPassword || (email && email !== user.email)) {
+    const wantsEmailChange = !!email && email !== user.email;
+    const wantsPasswordChange = !!newPassword;
+
+    if (wantsEmailChange || wantsPasswordChange) {
       if (!currentPassword) {
         throw new BadRequestException('Current password is required');
       }
 
-      const isValid = await bcrypt.compare(currentPassword, user.password);
+      const userWithPassword = await this.usersRepository.findOne({
+        where: { id: userId },
+        select: { id: true, password: true },
+      });
+
+      const isValid = userWithPassword
+        ? await bcrypt.compare(currentPassword, userWithPassword.password)
+        : false;
+
       if (!isValid) {
         throw new BadRequestException('Incorrect current password');
       }
     }
 
-    if (email && email !== user.email) {
+    if (wantsEmailChange) {
       const existUser = await this.findByEmail(email);
+
       if (existUser) {
-        throw new BadRequestException('Email is already taken');
+        throw new ConflictException('Email is already taken');
       }
-      user.email = email;
+
+      user.email = email.trim().toLowerCase();
     }
 
-    if (newPassword) {
+    if (wantsPasswordChange) {
       if (newPassword !== confirmPassword) {
         throw new BadRequestException('Passwords do not match');
       }
+
       const salt = await bcrypt.genSalt(10);
       user.password = await bcrypt.hash(newPassword, salt);
     }
 
-    if (name) user.name = name;
+    if (name) user.name = name.trim();
     if (phone !== undefined) user.phone = phone?.trim() || null;
 
-    const updatedUser = await this.usersRepository.save(user);
-
-    return updatedUser;
+    return this.usersRepository.save(user);
   }
 
-  async register(createUserDto: CreateUserDto) {
-    const {
-      name,
-      email,
-      password,
-      role = Roles.customer,
-      phone = null,
-      shopUrl = null,
-      salesChannel = null,
-      experience = null,
-      isApproved = true,
-    } = createUserDto;
+  async activate(activationToken: string): Promise<User> {
+    const user = await this.usersRepository.findOne({
+      where: { activationToken },
+    });
 
-    const existUser = await this.findByEmail(email);
-
-    if (existUser) {
-      throw new BadRequestException('Email is already exist');
+    if (!user) {
+      throw new BadRequestException('Invalid or expired activation token');
     }
 
-    const salt = await bcrypt.genSalt(10);
-    const hashedPassword = await bcrypt.hash(password, salt);
-
-    const activationToken = uuidv4();
-    const isDropshipper = role === Roles.dropshipper;
-
-    this.usersRepository.create({
-      name,
-      email,
-      password: hashedPassword,
-      activationToken,
-      role,
-      phone: isDropshipper ? phone?.trim() : null,
-      shopUrl: isDropshipper ? shopUrl?.trim() : null,
-      salesChannel: isDropshipper ? salesChannel : null,
-      experience: isDropshipper ? experience?.trim() : null,
-      isApproved,
-    });
-
-    //await sendActivationEmail(email, activationToken);
+    user.activationToken = null;
+    return this.usersRepository.save(user);
   }
 
-  async updateResetToken(userId: string, resetToken: string) {
-    return await this.usersRepository.update(userId, { resetToken });
+  async updateResetToken(userId: string, resetToken: string): Promise<void> {
+    await this.usersRepository.update({ id: userId }, { resetToken });
   }
 
-  async findByResetToken(resetToken: string) {
-    return await this.usersRepository.findOne({ where: { resetToken } });
+  async findByResetToken(resetToken: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { resetToken } });
   }
 
-  async updatePassword(userId: string, hashedPassword: string) {
-    return await this.usersRepository.update(userId, {
-      password: hashedPassword,
-      resetToken: null,
-    });
+  async updatePassword(userId: string, password: string): Promise<void> {
+    await this.usersRepository.update(
+      { id: userId },
+      { password, resetToken: null },
+    );
   }
 
-  async delete(id: string) {
+  async remove(id: string): Promise<string> {
     const user = await this.findById(id);
 
     if (!user) {

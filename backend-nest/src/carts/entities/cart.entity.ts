@@ -1,38 +1,38 @@
-import { IsUUID } from 'class-validator';
-import { CartItem } from './cart-item.entity';
-import { User } from 'src/users/entities/user.entity';
 import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   OneToMany,
   OneToOne,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { CartItem } from './cart-item.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity({ name: 'carts' })
 export class Cart {
   @PrimaryGeneratedColumn('uuid')
   id!: string;
 
+  @Index({ unique: true })
   @Column({ name: 'user_id', type: 'uuid' })
-  @IsUUID('4')
   userId!: string;
 
-  @OneToOne(() => User)
+  @OneToOne(() => User, (user) => user.carts, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'user_id' })
   user!: User;
 
-  @OneToMany(() => CartItem, (cartItem) => cartItem.cart)
+  @OneToMany(() => CartItem, (cartItem) => cartItem.cart, {
+    onDelete: 'CASCADE',
+  })
   items!: CartItem[];
 
-  @Column({ name: 'created_at' })
-  @CreateDateColumn()
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
-  @Column({ name: 'updated_at' })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }

@@ -1,10 +1,16 @@
 import {
   Body,
-  ClassSerializerInterceptor,
   Controller,
+  Delete,
   Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
   Patch,
+  Put,
   UseInterceptors,
+  ClassSerializerInterceptor,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CurrentUser } from './current-user.decorator';
@@ -17,15 +23,31 @@ export class UsersController {
 
   @UseInterceptors(ClassSerializerInterceptor)
   @Get('me')
-  async getProfile(@CurrentUser() user: User) {
-    return await this.usersService.getProfile(user.id);
+  getProfile(@CurrentUser() user: User) {
+    return this.usersService.getProfile(user.id);
   }
 
-  @Patch('me')
-  async updateProfile(
+  @Put('me')
+  @HttpCode(HttpStatus.OK)
+  updateProfile(
     @CurrentUser() user: User,
     @Body() updateProfileDto: UpdateProfileDto,
   ) {
     return this.usersService.updateProfile(user.id, updateProfileDto);
+  }
+
+  @Patch('me')
+  @HttpCode(HttpStatus.OK)
+  updateProfilePartial(
+    @CurrentUser() user: User,
+    @Body() updateProfileDto: UpdateProfileDto,
+  ) {
+    return this.usersService.updateProfile(user.id, updateProfileDto);
+  }
+
+  @HttpCode(HttpStatus.NO_CONTENT)
+  @Delete('me')
+  remove(@CurrentUser() user: User) {
+    return this.usersService.remove(user.id);
   }
 }

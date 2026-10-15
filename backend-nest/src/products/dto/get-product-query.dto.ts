@@ -1,40 +1,45 @@
-import { Exclude, Expose, Type } from 'class-transformer';
-import { IsInt, IsNumber, IsOptional, IsString, Min } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsInt,
+  IsNumber,
+  IsOptional,
+  IsString,
+  IsUUID,
+  Max,
+  Min,
+} from 'class-validator';
 
-@Exclude()
 export class GetProductQueryDto {
-  @Expose()
   @IsOptional()
-  @IsString()
+  @IsUUID('4')
   categoryId?: string;
 
-  @Expose()
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
   minPrice?: number;
 
-  @Expose()
   @IsOptional()
   @Type(() => Number)
-  @IsNumber()
+  @IsNumber({ maxDecimalPlaces: 2 })
+  @Min(0)
   maxPrice?: number;
 
-  @Expose()
   @IsOptional()
   @IsString()
   search?: string;
 
-  @Expose()
   @IsOptional()
   @Type(() => Number)
   @IsInt()
   @Min(1)
-  page?: number = 1;
+  page: number = 1;
 
-  @Expose()
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
-  @Min(4)
-  limit?: number = 12;
+  @Min(1)
+  @Max(100, { message: 'limit must not exceed 100' })
+  limit: number = 12;
 }

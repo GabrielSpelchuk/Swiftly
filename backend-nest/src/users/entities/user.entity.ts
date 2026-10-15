@@ -1,11 +1,16 @@
 import {
-  Entity,
   Column,
   CreateDateColumn,
-  UpdateDateColumn,
+  Entity,
+  Index,
+  OneToMany,
   PrimaryGeneratedColumn,
+  UpdateDateColumn,
 } from 'typeorm';
-import { Roles } from 'src/utils/roles';
+import { Roles } from '../../utils/roles';
+import { Product } from '../../products/entities/product.entity';
+import { Order } from '../../orders/entities/order.entity';
+import { Cart } from '../../carts/entities/cart.entity';
 
 @Entity({ name: 'users' })
 export class User {
@@ -15,10 +20,11 @@ export class User {
   @Column()
   name!: string;
 
-  @Column({ unique: true })
+  @Index({ unique: true })
+  @Column()
   email!: string;
 
-  @Column()
+  @Column({ select: false })
   password!: string;
 
   @Column({ type: 'enum', enum: Roles, default: Roles.customer })
@@ -33,7 +39,7 @@ export class User {
   @Column({ name: 'is_blocked', type: 'boolean', default: false })
   isBlocked!: boolean;
 
-  @Column({ nullable: true, type: 'varchar' })
+  @Column({ type: 'varchar', nullable: true })
   phone!: string | null;
 
   @Column({ type: 'decimal', precision: 10, scale: 2, default: 0 })
@@ -45,11 +51,23 @@ export class User {
   @Column({ name: 'sales_channel', type: 'varchar', nullable: true })
   salesChannel!: string | null;
 
-  @Column({ nullable: true, type: 'varchar' })
+  @Column({ type: 'text', nullable: true })
   experience!: string | null;
 
   @Column({ name: 'is_approved', type: 'boolean', default: true })
   isApproved!: boolean;
+
+  @OneToMany(() => Product, (product) => product.supplier)
+  products!: Product[];
+
+  @OneToMany(() => Order, (order) => order.placedBy)
+  placedOrders!: Order[];
+
+  @OneToMany(() => Order, (order) => order.supplier)
+  supplierOrders!: Order[];
+
+  @OneToMany(() => Cart, (cart) => cart.user)
+  carts!: Cart[];
 
   @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;

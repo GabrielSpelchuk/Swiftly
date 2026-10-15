@@ -1,4 +1,4 @@
-import { Exclude, Expose } from 'class-transformer';
+import { Type } from 'class-transformer';
 import {
   IsArray,
   IsInt,
@@ -6,47 +6,48 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
+  MaxLength,
   Min,
+  MinLength,
 } from 'class-validator';
 
-@Exclude()
 export class CreateProductDto {
-  @Expose()
   @IsNotEmpty()
   @IsString()
+  @MinLength(3)
+  @MaxLength(100)
   name!: string;
 
-  @Expose()
   @IsOptional()
   @IsString()
+  @MaxLength(2000)
   description?: string;
 
-  @Expose()
   @IsNotEmpty()
-  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2, allowNaN: false, allowInfinity: false })
   @Min(0)
   wholesalePrice!: number;
 
-  @Expose()
   @IsNotEmpty()
-  @IsNumber({ allowNaN: false, allowInfinity: false })
+  @Type(() => Number)
+  @IsNumber({ maxDecimalPlaces: 2, allowNaN: false, allowInfinity: false })
   @Min(0)
   retailPrice!: number;
 
-  @Expose()
   @IsOptional()
+  @Type(() => Number)
   @IsInt()
   @Min(0)
   stock?: number;
 
-  @Expose()
   @IsOptional()
   @IsArray()
   @IsString({ each: true })
   images?: string[];
 
-  @Expose()
   @IsOptional()
-  @IsString()
+  @IsUUID('4')
   category?: string;
 }

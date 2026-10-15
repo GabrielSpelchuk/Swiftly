@@ -1,90 +1,70 @@
 import {
-  IsBoolean,
-  IsDecimal,
-  IsInt,
-  IsOptional,
-  IsPositive,
-  IsString,
-  IsUUID,
-  Length,
-  MaxLength,
-  Min,
-} from 'class-validator';
-import { Category } from 'src/categories/entities/category.entity';
-import { User } from 'src/users/entities/user.entity';
-import {
   Column,
   CreateDateColumn,
   Entity,
+  Index,
   JoinColumn,
   ManyToOne,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Category } from '../../categories/entities/category.entity';
+import { User } from '../../users/entities/user.entity';
+import { OrderItem } from '../../order-items/entities/order-item.entity';
+import { CartItem } from '../../carts/entities/cart-item.entity';
 
 @Entity({ name: 'products' })
+@Index(['categoryId'])
+@Index(['supplierId'])
 export class Product {
   @PrimaryGeneratedColumn('uuid')
-  @IsUUID('4')
   id!: string;
 
   @Column()
-  @IsString()
-  @Length(3, 50)
   name!: string;
 
-  @Column({ nullable: true })
-  @IsOptional()
-  @IsString()
-  @MaxLength(255)
-  description!: string;
+  @Column({ type: 'text', nullable: true })
+  description!: string | null;
 
   @Column({ name: 'wholesale_price', type: 'decimal', precision: 10, scale: 2 })
-  @IsDecimal()
-  @IsPositive()
   wholesalePrice!: number;
 
   @Column({ name: 'retail_price', type: 'decimal', precision: 10, scale: 2 })
-  @IsDecimal()
-  @IsPositive()
   retailPrice!: number;
 
   @Column({ default: 0 })
-  @IsInt()
-  @Min(0)
   stock!: number;
 
   @Column({ type: 'simple-array', nullable: true })
-  @IsOptional()
-  @IsString({ each: true })
   images!: string[];
 
   @Column({ name: 'is_active', type: 'boolean', default: true })
-  @IsBoolean()
   isActive!: boolean;
 
   @Column({ name: 'supplier_id', type: 'uuid' })
-  @IsUUID('4')
   supplierId!: string;
 
-  @ManyToOne(() => User)
+  @ManyToOne(() => User, (user) => user.products, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'supplier_id' })
   supplier!: User;
 
-  @Column({ name: 'category_id', nullable: true })
-  @IsOptional()
-  @IsUUID('4')
-  categoryId!: string;
+  @Column({ name: 'category_id', type: 'uuid', nullable: true })
+  categoryId!: string | null;
 
-  @ManyToOne(() => Category)
+  @ManyToOne(() => Category, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'category_id' })
-  category!: Category;
+  category!: Category | null;
 
-  @Column({ name: 'created_at' })
-  @CreateDateColumn()
+  @OneToMany(() => OrderItem, (item) => item.product)
+  orderItems!: OrderItem[];
+
+  @OneToMany(() => CartItem, (item) => item.product)
+  cartItems!: CartItem[];
+
+  @CreateDateColumn({ name: 'created_at' })
   createdAt!: Date;
 
-  @Column({ name: 'updated_at' })
-  @UpdateDateColumn()
+  @UpdateDateColumn({ name: 'updated_at' })
   updatedAt!: Date;
 }

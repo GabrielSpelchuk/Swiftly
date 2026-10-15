@@ -1,20 +1,20 @@
-import { Exclude, Expose } from 'class-transformer';
-import { IsString, Length } from 'class-validator';
+import {
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+  MaxLength,
+  MinLength,
+} from 'class-validator';
 
-@Exclude()
 export class CreateCategoryDto {
-  @Expose()
+  @IsNotEmpty()
   @IsString()
-  @Length(3, 25)
+  @MinLength(2)
+  @MaxLength(50)
   name!: string;
 
-  @Expose()
+  @IsOptional()
   @IsString()
-  @Length(3, 25)
+  @MaxLength(500)
   description?: string;
-
-  @Expose()
-  @IsString()
-  @Length(3, 255)
-  slug!: string;
 }

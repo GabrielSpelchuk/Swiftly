@@ -1,36 +1,32 @@
 import { Module } from '@nestjs/common';
+import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { TypeOrmModule } from '@nestjs/typeorm';
 import { UsersModule } from './users/users.module';
-import { ProductsModule } from './products/products.module';
-import { CategoriesModule } from './categories/categories.module';
-import { OrdersModule } from './orders/orders.module';
 import { TokensModule } from './tokens/tokens.module';
+import { CategoriesModule } from './categories/categories.module';
+import { ProductsModule } from './products/products.module';
 import { CartsModule } from './carts/carts.module';
-import { CartItemsModule } from './cart-items/cart-items.module';
-import { OrderItemsModule } from './order-items/order-items.module';
+import { OrdersModule } from './orders/orders.module';
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'postgres',
-      host: 'localhost',
-      port: 5432,
-      username: 'postgres',
-      password: '12345',
-      database: 'Swiftly',
+      host: process.env.DB_HOST ?? 'localhost',
+      port: Number(process.env.DB_PORT ?? 5432),
+      username: process.env.DB_USER ?? 'postgres',
+      password: process.env.DB_PASSWORD ?? '12345',
+      database: process.env.DB_NAME ?? 'Swiftly',
       autoLoadEntities: true,
       synchronize: true,
     }),
     UsersModule,
-    ProductsModule,
-    CategoriesModule,
-    OrdersModule,
     TokensModule,
+    CategoriesModule,
+    ProductsModule,
     CartsModule,
-    CartItemsModule,
-    OrderItemsModule,
+    OrdersModule,
   ],
   controllers: [AppController],
   providers: [AppService],

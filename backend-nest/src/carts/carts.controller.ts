@@ -1,34 +1,57 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  HttpCode,
+  HttpStatus,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Put,
+} from '@nestjs/common';
 import { CartsService } from './carts.service';
-import { CreateCartDto } from './dto/create-cart.dto';
-import { UpdateCartDto } from './dto/update-cart.dto';
+import { AddCartItemDto } from './dto/cart-item.dto';
+import { UpdateCartItemDto } from './dto/update-cart-item.dto';
+import { CurrentUser } from '../users/current-user.decorator';
+import { User } from '../users/entities/user.entity';
 
-@Controller('carts')
+@Controller('cart')
 export class CartsController {
   constructor(private readonly cartsService: CartsService) {}
 
-  @Post()
-  create(@Body() createCartDto: CreateCartDto) {
-    return this.cartsService.create(createCartDto);
-  }
-
   @Get()
-  findAll() {
-    return this.cartsService.findAll();
+  getCart(@CurrentUser() user: User) {
+    return this.cartsService.getCart(user.id);
   }
 
-  @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.cartsService.findOne(+id);
+  @Post('items')
+  @HttpCode(HttpStatus.CREATED)
+  addItem(@Body() dto: AddCartItemDto, @CurrentUser() user: User) {
+    return this.cartsService.addItem(user.id, dto);
   }
 
-  @Patch(':id')
-  update(@Param('id') id: string, @Body() updateCartDto: UpdateCartDto) {
-    return this.cartsService.update(+id, updateCartDto);
+  @Put('items/:id')
+  updateItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() dto: UpdateCartItemDto,
+    @CurrentUser() user: User,
+  ) {
+    return this.cartsService.updateItem(user.id, id, dto);
   }
 
-  @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.cartsService.remove(+id);
+  @Delete('items/:id')
+  @HttpCode(HttpStatus.NO_CONTENT)
+  removeItem(
+    @Param('id', ParseUUIDPipe) id: string,
+    @CurrentUser() user: User,
+  ) {
+    return this.cartsService.removeItem(user.id, id);
+  }
+
+  @Delete()
+  @HttpCode(HttpStatus.NO_CONTENT)
+  clearCart(@CurrentUser() user: User) {
+    return this.cartsService.clearCart(user.id);
   }
 }

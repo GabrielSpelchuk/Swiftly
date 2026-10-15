@@ -1,16 +1,12 @@
-import { PartialType } from '@nestjs/mapped-types';
-import { CreateOrderDto } from './create-order.dto';
-import { Exclude, Expose } from 'class-transformer';
-import { ORDER_STATUS } from 'src/utils/orderStatus';
-import { IsEnum, IsString } from 'class-validator';
+import { IsEnum, IsOptional, IsString, MaxLength } from 'class-validator';
+import { ORDER_STATUS } from '../../utils/orderStatus';
 
-@Exclude()
-export class UpdateOrderDto extends PartialType(CreateOrderDto) {
-  @Expose()
+export class UpdateOrderDto {
   @IsEnum(ORDER_STATUS)
   status!: ORDER_STATUS;
 
-  @Expose()
+  @IsOptional()
   @IsString()
-  trackingNumber?: string | undefined;
+  @MaxLength(100)
+  trackingNumber?: string;
 }

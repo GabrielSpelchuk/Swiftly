@@ -1,6 +1,6 @@
 export enum Roles {
-  admin,
-  supplier,
-  dropshipper,
-  customer,
+  admin = 'admin',
+  supplier = 'supplier',
+  dropshipper = 'dropshipper',
+  customer = 'customer',
 }
