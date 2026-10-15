@@ -44,6 +44,13 @@ import { OrdersModule } from './orders/orders.module';
         username: config.get<string>('DB_USER', 'postgres'),
         password: config.get<string>('DB_PASSWORD', '12345'),
         database: config.get<string>('DB_NAME', 'Swiftly'),
+        // Neon (як і більшість керованих БД) не приймає з'єднання без
+        // SSL. Локальний Postgres працює без нього, тому вмикається
+        // змінною DB_SSL, а не жорстко.
+        ssl:
+          config.get<string>('DB_SSL', 'false') === 'true'
+            ? { rejectUnauthorized: false }
+            : false,
         autoLoadEntities: true,
         // synchronize переписує таблиці під себе і здатний знести дані.
         // У production це МАЄ бути false — схемою керує npm run migration:run.
