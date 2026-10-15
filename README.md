@@ -4,6 +4,16 @@
 дропшипери їх перепродають за гуртовими цінами, звичайні клієнти купують
 у роздріб, адмін керує користувачами та заявками.
 
+**🌐 Жива версія: https://swiftly-topaz.vercel.app**
+
+| | |
+|---|---|
+| Застосунок | https://swiftly-topaz.vercel.app |
+| API | https://swiftly-topaz.vercel.app/api |
+| Health-check | https://swiftly-topaz.vercel.app/api/health |
+
+Тестові акаунти: `admin@` / `supplier@` / `dropshipper@` / `customer@swiftly.com`, пароль `password123`.
+
 ---
 
 ## Технології
