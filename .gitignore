@@ -1,3 +1,24 @@
-node_modules
+# dependencies
+node_modules/
+
+# env
 .env
+.env.local
+.env.*.local
+
+# ДОЛУЧАЄМО .env.example — це шаблон, його треба комітити
 .env.example
+!.env.example
+
+# build
+dist/
+build/
+coverage/
+*.tsbuildinfo
+
+# misc
+.DS_Store
+*.log
+npm-debug.log*
+.idea/
+.vscode/

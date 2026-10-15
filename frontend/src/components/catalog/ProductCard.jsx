@@ -10,14 +10,20 @@ export function ProductCard({ product }) {
   const { isSupplier, isAdmin, isApprovedDropshipper } = useAuth();
   const { addItem } = useCart();
 
-  const showWholesale = isApprovedDropshipper || isSupplier || isAdmin;
+  const hasWholesale = product.wholesalePrice !== undefined && product.wholesalePrice !== null;
+
+  // Показуємо гуртову ціну лише тоді, коли вона Є в даних.
+  // Раніше умова спиралася лише на роль: під час першого рендера
+  // refreshThunk ще не встиг відновити сесію, тому бекенд віддавав
+  // товари без wholesalePrice, а картка вже показувала "Гурт NaN грн".
+  const showWholesale = (isApprovedDropshipper || isSupplier || isAdmin) && hasWholesale;
   const canAddToCart  = !isSupplier && !isAdmin;
 
-  const margin = showWholesale && product.wholesalePrice && product.retailPrice
+  const margin = showWholesale
     ? Math.round(((product.retailPrice - product.wholesalePrice) / product.wholesalePrice) * 100)
     : null;
 
-  const profit = showWholesale && product.wholesalePrice && product.retailPrice
+  const profit = showWholesale
     ? (product.retailPrice - product.wholesalePrice).toFixed(0)
     : null;
 
